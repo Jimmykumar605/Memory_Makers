@@ -1,0 +1,19 @@
+* {
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+}
+
+.signup {
+  width: auto;
+  border-radius: 26px;
+  margin: 147px 0px 147px 0px;
+  background-color: rgba(255, 255, 255, 0.61);
+  padding: 30px;
+  min-height: min-content;
+}
+
+.signup_photographer {
+  background-image: url("../../assets/images/MicrosoftTeams-image.png");
+  background-size: cover;
+}
