@@ -19,8 +19,8 @@ function BestPhotoGraphGrid() {
       </div>
       <div className="photo-gallery">
         {randomImages.map((image) => (
-          <Link to="/photogellery">
-            <div key={image.id} className="photo-card">
+          <Link key={image.id} to="/photogellery">
+            <div className="photo-card">
               <img className="image" src={image.image} alt={image.title} />
               <div className="image-overlay">
                 <h2 className="image-title">{image.title}</h2>
