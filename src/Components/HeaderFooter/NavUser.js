@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthProvider";
-import { getSessionData } from "../../Utils/Utils";
+import { getSessionData, removeSessionData } from "../../Utils/Utils";
 
 function UserIcon() {
   const [user, setUser] = useState(null);
@@ -14,9 +14,10 @@ function UserIcon() {
     if (sessionData) {
       setUser(sessionData);
     }
-  }, [sessionData]);
+  }, []);
   const handleLogout = () => {
-    sessionStorage.removeItem("USER_DATA");
+    removeSessionData("USER_DATA");
+    setUser({});
     setAuth(false);
     navigate("/Login");
   };
@@ -50,7 +51,7 @@ function UserIcon() {
               <Link
                 className="dropdown-item text-light"
                 to="/"
-                onClick={handleLogout}
+                onClick={() => handleLogout()}
               >
                 Logout
               </Link>

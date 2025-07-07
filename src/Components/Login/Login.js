@@ -11,9 +11,7 @@ import { removeSessionData, setSessionData } from "../../Utils/Utils";
 const AppLogin = () => {
   const { auth, setAuth, currentUser, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
-  // const [user, setUser] = useState();
   const [isLoading, setIsLoading] = useState(false);
-  // const [user, setUser] = useState();
   const onFinish = (values) => {
     setIsLoading(true);
     setTimeout(() => {
@@ -23,8 +21,6 @@ const AppLogin = () => {
   };
 
   const handleLogin = async (values) => {
-    console.log("Submitting form with values", values);
-
     try {
       // In case if you want to login in your mobile phone please change the localhost to ip 192.168.1.15
       const response = await axios.post("http://localhost:9000/login", {
@@ -44,8 +40,8 @@ const AppLogin = () => {
         } else {
           navigate("/photographers_grid");
         }
+        window.location.reload();
         setUser(response.data.user);
-        console.log(response.data.user);
       } else {
         notification.error({
           message: "Login Failed",

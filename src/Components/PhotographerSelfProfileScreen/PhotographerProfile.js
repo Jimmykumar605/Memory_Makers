@@ -2,10 +2,21 @@ import React from "react";
 import { useState } from "react";
 import photographer_data from "../../assets/Photographers";
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { getSessionData } from "../../Utils/Utils";
 function PhotographerProfile() {
-  const [user, setUser] = useState(photographer_data);
-  const sessionData = JSON.parse(sessionStorage.getItem("user"));
+  const [user, setUser] = useState({});
 
+  useEffect(() => {
+    try {
+      const sessionData = getSessionData("USER_DATA");
+      if (sessionData) {
+        setUser(sessionData);
+      }
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  }, []);
   return (
     <>
       <div className="container">
@@ -13,16 +24,16 @@ function PhotographerProfile() {
           <div className="row pt-5">
             <div className="col-lg-2 col-md-2 col-8 m-auto pb-5">
               <img
-                src={user[0].img}
+                src={user?.img}
                 className="rounded-circle"
-                alt={user[0].name}
+                alt={user?.name}
               />
             </div>
             <div className="col-lg-6 col-10 m-auto text-start">
-              <h2>Photographer {sessionData.user_name}</h2>
-              <h5>{sessionData.user_location}</h5>
-              <p>{user[0].content}</p>
-              <p>{sessionData.user_phone_no}</p>
+              <h2>Photographer {user?.name}</h2>
+              <h5>{user?.user_location}</h5>
+              <p>{user?.content}</p>
+              <p>{user?.user_phone_no}</p>
             </div>
             <div className="col-lg-4  col-10 m-auto ">
               <div className="d-grid gap-2 col-8 mx-auto">
