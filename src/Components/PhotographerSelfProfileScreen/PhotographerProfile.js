@@ -4,8 +4,10 @@ import photographer_data from "../../assets/Photographers";
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import { getSessionData } from "../../Utils/Utils";
+import "./PhotographerProfile.css";
 function PhotographerProfile() {
   const [user, setUser] = useState({});
+  const [sImages, setImages] = useState([]);
 
   useEffect(() => {
     try {
@@ -17,62 +19,119 @@ function PhotographerProfile() {
       console.log("error :>> ", error);
     }
   }, []);
+console.log("user :>> ", user);
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImages(prevImages => [...prevImages, reader.result]);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <>
-      <div className="container">
-        <div className="text-center">
-          <div className="row pt-5">
-            <div className="col-lg-2 col-md-2 col-8 m-auto pb-5">
+      <div className="photographer-details-container">
+        {/* Header Section */}
+        <div className="photographer-header">
+          <div className="photographer-info">
+            <div className="photographer-image">
               <img
-                src={user?.img}
+                src={`http://localhost:9000/${user?.profileImage}`}
                 className="rounded-circle"
                 alt={user?.name}
               />
             </div>
-            <div className="col-lg-6 col-10 m-auto text-start">
-              <h2>Photographer {user?.name}</h2>
-              <h5>{user?.user_location}</h5>
-              <p>{user?.content}</p>
-              <p>{user?.user_phone_no}</p>
-            </div>
-            <div className="col-lg-4  col-10 m-auto ">
-              <div className="d-grid gap-2 col-8 mx-auto">
-                <Link to="/edit_photographer_profile">
-                  <button className="btn btn-success">Edit Profile</button>
-                </Link>
+            <div className="photographer-details">
+              <h2 className="photographer-name">{user?.name}</h2>
+              <h5 className="photographer-location">{user?.city}</h5>
+              <p className="photographer-bio">{user?.bio}</p>
+              <div className="photographer-stats">
+                <p className="stat-item">Phone: {user?.phone}</p>
+                <p className="stat-item">Email: {user?.email}</p>
+                <p className="stat-item">Language: {user?.language}</p>
               </div>
             </div>
           </div>
+          <div className="edit-profile-btn">
+            <Link to="/edit_photographer_profile">
+              <button className="btn btn-success">Edit Profile</button>
+            </Link>
+          </div>
         </div>
-        <div className="headingbutton text-center m-3">
-          <div className="d-grid gap-5 d-md-block">
-            <button type="button" className="btn btn-primary m-1">
+
+        {/* Gallery Filter Section */}
+        <div className="gallery-filters">
+          <div className="filter-buttons">
+            <button
+              type="button"
+              className="filter-btn active"
+              onClick={() => setImages([])}
+            >
               Wedding
             </button>
-            <button type="button" className="btn btn-primary m-1">
+            <button
+              type="button"
+              className="filter-btn"
+              onClick={() => setImages([])}
+            >
               Pre-Wedding
             </button>
-            <button type="button" className="btn btn-primary m-1">
+            <button
+              type="button"
+              className="filter-btn"
+              onClick={() => setImages([])}
+            >
               Portfolio
             </button>
-            <button type="button" className="btn btn-primary m-1">
+            <button
+              type="button"
+              className="filter-btn"
+              onClick={() => setImages([])}
+            >
               Ring Ceremony
             </button>
-            <button type="button" className="btn btn-primary m-1">
+            <button
+              type="button"
+              className="filter-btn"
+              onClick={() => setImages([])}
+            >
               Birthday
             </button>
-            <button type="button" className="btn btn-primary m-1">
+            <button
+              type="button"
+              className="filter-btn"
+              onClick={() => setImages([])}
+            >
               Baby-Shower
             </button>
           </div>
         </div>
-        <div className="photographer-work">
-          <div className="images"></div>
-          <p className="text-center m-3">Upload Your Latest Images </p>
-          <div className="text-center m-3">
-            <button type="file" className="btn btn-primary m-1">
-              Upload images
-            </button>
+
+        {/* Gallery Section */}
+        <div className="gallery-section">
+          <div className="photographer-work">
+            <div className="upload-section">
+              <h4>Upload Your Latest Images</h4>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="upload-input"
+              />
+              <div className="image-preview">
+                {sImages.map((image, index) => (
+                  <img
+                    key={index}
+                    src={image}
+                    alt="preview"
+                    className="preview-image"
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

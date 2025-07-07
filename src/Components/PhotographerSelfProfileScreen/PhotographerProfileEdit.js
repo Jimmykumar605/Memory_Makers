@@ -2,31 +2,40 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { message, notification } from "antd";
+import { getSessionData } from "../../Utils/Utils";
 
 function PhotographerProfileEdit(props) {
   const [imageFile, setImageFile] = useState();
-  const [file, setFile] = useState();
+  const [previewImage, setPreviewImage] = useState(null);
   const [inputField, setInputField] = useState({
     user_name: "",
-    // surname: "",
     user_email_id: "",
     user_phone_no: "",
     user_location: "",
+    language: "",
     userImageUrl: "",
   });
+
+  // Helper function for email validation
+  const isValidEmail = (email) => {
+    const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+    return emailRegex.test(email);
+  };
   const [errField, setErrField] = useState({
     nameErr: "",
-    // surnameErr: "",
     cityErr: "",
     numberErr: "",
+    emailErr: "",
+    languageErr: ""
   });
   const validForm = () => {
     let formIsValid = true;
     setErrField({
       nameErr: "",
-      // surnameErr: "",
       cityErr: "",
       numberErr: "",
+      emailErr: "",
+      languageErr: ""
     });
 
     if (inputField.user_name === "") {
@@ -34,13 +43,6 @@ function PhotographerProfileEdit(props) {
       setErrField((prevState) => ({
         ...prevState,
         nameErr: "Please enter name",
-      }));
-    }
-    if (inputField.surname === "") {
-      formIsValid = false;
-      setErrField((prevState) => ({
-        ...prevState,
-        surnameErr: "Please enter surname",
       }));
     }
     if (inputField.user_location === "") {
@@ -58,41 +60,60 @@ function PhotographerProfileEdit(props) {
       }));
     }
 
+    // Email validation
+    if (inputField.user_email_id === "") {
+      formIsValid = false;
+      setErrField((prevState) => ({
+        ...prevState,
+        emailErr: "Please enter your email",
+      }));
+    } else if (!isValidEmail(inputField.user_email_id)) {
+      formIsValid = false;
+      setErrField((prevState) => ({
+        ...prevState,
+        emailErr: "Please enter a valid email address",
+      }));
+    }
+
+    // Language validation
+    if (inputField.language === "") {
+      formIsValid = false;
+      setErrField((prevState) => ({
+        ...prevState,
+        languageErr: "Please enter your language",
+      }));
+    }
+
     return formIsValid;
   };
-  const sessionKey = "user";
 
   //
   const updateInputField = (user_details) => {
     setInputField((prevInputField) => ({
       ...prevInputField,
-      user_name: user_details.user_name,
-      user_email_id: user_details.user_email_id,
-      user_phone_no: user_details.user_phone_no,
-      user_location: user_details.user_location,
+      user_name: user_details?.name,
+      user_email_id: user_details?.email,
+      user_phone_no: user_details?.phone,
+      user_location: user_details?.city,
+      language: user_details?.language,
+      userImageUrl: user_details?.userImageUrl,
     }));
   };
   useEffect(() => {
-    const user_details = JSON.parse(sessionStorage.getItem(sessionKey));
-    console.log("--user_details", user_details);
+    const user_details = getSessionData("USER_DATA");
+    console.log("user_details :>> ", user_details);
     updateInputField(user_details);
-  }, [sessionStorage.getItem(sessionKey)]);
+  }, []); 
   const inputHandler = (e) => {
     setInputField({ ...inputField, [e.target.name]: e.target.value });
   };
   function handleChange(e) {
-    console.log(e.target.files);
-    setImageFile(e.target.files[0]);
-    // axios.post('/image', )
-    setFile(URL.createObjectURL(e.target.files[0]));
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setPreviewImage(URL.createObjectURL(file));
+    }
   }
-  // useEffect(() => {
-  //   console.log('inputField', inputField)
-
-  //   return () => {
-
-  //   }
-  // }, [inputField])
 
   const submitButton = async (e) => {
     e.preventDefault();
@@ -101,47 +122,72 @@ function PhotographerProfileEdit(props) {
     if (validForm()) {
       const formDetails = Object.fromEntries(formData.entries());
       Object.assign(inputField, props);
-      const userData = sessionStorage.getItem("user");
-      const parseData = JSON.parse(userData);
-      const url = `http://localhost:9000/update/${parseData.id}`;
+      const userData = getSessionData("USER_DATA");
+      const url = `http://localhost:9000/update/photographer/${userData._id}`;
 
-      try {
-        let ImageUrl = "";
-        if (imageFile !== undefined) {
-          const imageFormData = new FormData();
-          imageFormData.append("profile", imageFile);
+        try {
+          // Create a single FormData object for all data
+          const formData = new FormData();
+          formData.append("name", formDetails.user_name);
+          formData.append("email", formDetails.user_email_id);
+          formData.append("phone", formDetails.user_phone_no);
+          formData.append("city", formDetails.user_location);
+          formData.append("language", formDetails.language);          
+          // Add image file if it exists
+          if (imageFile) {
+            formData.append("profile", imageFile);
+          }
 
-          const res = await axios.post(
-            "http://localhost:9000/upload",
-            imageFormData
-          );
-          ImageUrl = res?.data?.profileUrl;
-          formDetails.user_image = ImageUrl;
-        }
-
-        const res = await axios.patch(url, formDetails);
-        // console.log('res patch', res);
-        console.log("res.data.success", res.data.success);
-        if (res.data.success) {
+          // Send all data in a single request
+          const res = await axios.post(url, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+        console.log('res :>>', res);
+        if (res.data && res.data.success) {
           notification.success({
-            message: "update Success",
+            message: "Profile Updated Successfully",
             description: res.data.message,
           });
-          // let updated_inputs = {
-          //   name: formDetails.user_name,
-          //   phone_no: formDetails.user_phone_no,
-          //   location: formDetails.user_location,
-          // };
-          let sessionValues = JSON.parse(sessionStorage.getItem("user"));
-          let UpdateSessionObject = {
-            ...sessionValues,
-            user_location: formDetails.user_location,
-            user_phone_no: formDetails.user_phone_no,
+
+          // Update the session data
+          const updatedSessionData = {
+            ...userData,
             user_name: formDetails.user_name,
+            user_email_id: formDetails.user_email_id,
+            user_phone_no: formDetails.user_phone_no,
+            user_location: formDetails.user_location,
+            language: formDetails.language,
+            userImageUrl: res.data.userImageUrl
           };
-          let updated_inputs_string = JSON.stringify(UpdateSessionObject);
-          sessionStorage.setItem("user", updated_inputs_string);
-          // console.log("updated_inputs_string :>> ", updated_inputs_string);
+          sessionStorage.setItem("USER_DATA", JSON.stringify(updatedSessionData));
+
+          try {
+            // Redirect to profile page
+            window.location.href = "/photographer_profile";
+          } catch (error) {
+            throw new Error(error.message || "Failed to update profile");
+          }
+
+          try {
+            let sessionValues = getSessionData("USER_DATA");
+            let UpdateSessionObject = {
+              ...sessionValues,
+              user_location: formDetails.user_location,
+              user_phone_no: formDetails.user_phone_no,
+              user_name: formDetails.user_name,
+              language: formDetails.language,
+              userImageUrl: res.data.userImageUrl
+            };
+            let updated_inputs_string = JSON.stringify(UpdateSessionObject);
+            sessionStorage.setItem("user", updated_inputs_string);
+          } catch (error) {
+            notification.error({
+              message: "Update Failed",
+              description: error.message || "Failed to update session data",
+            });
+          }
         } else {
           notification.error({
             message: "Update Failed",
@@ -149,58 +195,15 @@ function PhotographerProfileEdit(props) {
           });
         }
       } catch (e) {
-        notification.error("Something went wrong!");
+        notification.error({
+          message: "Error",
+          description: e.message || "Something went wrong!"
+        });
       }
     } else {
       message.error("Form Invalid");
     }
   };
-
-  //       await axios
-  //         .post("http://localhost:9000/upload", imageFormData)
-  //         .then((res) => {
-  //           //fetch image url
-  //           ImageUrl = res?.data?.profileUrl;
-  //           formDetails.user_image = ImageUrl;
-
-  //           // formData.append("userImageUrl", ImageUrl)
-  //         });
-
-  //       console.log("formDetails", formDetails);
-  //     }
-  //     await axios.patch(url, formDetails).then((res) => {
-  //       console.log("res patch", res);
-  //     });
-
-  //     message.success("Form submitted successfully!");
-  //     // let userId = sessionStorage.getItem("user");
-  //     // console.log("userId", userId);
-  //     // if (validForm()) {
-  //     //   Object.assign(inputField, props);
-  //     // console.log("userId", userId);
-  //     // return false;
-  //     // let url = "http://localhost:9000/update/";
-  //     // let options = {
-  //     //   method: "POST",
-  //     //   url: url,
-  //     //   data: inputField,
-  //     // };
-  //     // try {
-  //     //   let response = await axios(options);
-  //     //   if (response.data.statusText === "Success") {
-  //     //     toast.success(response.data.message);
-  //     //   } else {
-  //     //     toast.error(response.data.message);
-  //     //   }
-  //     // } catch (e) {
-  //     //   toast.error("Something went wrong!");
-  //     // }
-  //   } catch (e) {
-  //     message.error("Something went wrong!");
-  //   }
-  // } else {
-  //   message.error("Form Invalid");
-  // }
 
   return (
     <>
@@ -220,17 +223,26 @@ function PhotographerProfileEdit(props) {
                   className="rounded-circle mt-5"
                   width="250px"
                   alt=""
-                  src="./images/photographer/photographer1.jpg"
+                  src={inputField.userImageUrl}
                 />
-                <span className="font-weight-bold">{inputField.user_name}</span>
                 <div>
                   <div class="d-flex justify-content-center mb-4">
-                    <img
-                      src={file}
-                      class="rounded-circle"
-                      alt=""
-                      style={{ width: "200px", height: "200px" }}
-                    />
+                    <div className="profile-image-preview">
+                    {previewImage ? (
+                      <img
+                        src={previewImage}
+                        className="rounded-circle"
+                        alt="Preview"
+                        style={{ width: "200px", height: "200px", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <img
+                        src="./images/photographer/photographer1.jpg"
+                        className="rounded-circle"
+                        style={{ width: "200px", height: "200px" }}
+                      />
+                    )}
+                  </div>
                   </div>
                   <div class="d-flex justify-content-center">
                     <div class="btn btn-primary btn-rounded">
@@ -279,22 +291,6 @@ function PhotographerProfileEdit(props) {
                       </span>
                     )}
                   </div>
-                  {/* <div className="col-md-4">
-                    <label className="form-label">Surname</label>
-                    <input
-                      className="form-control"
-                      type="text"
-                      name="surname"
-                      autoComplete="off"
-                      value={inputField.surname}
-                      onChange={inputHandler}
-                    />
-                    {errField.surnameErr.length > 0 && (
-                      <span className="error" style={{ color: "red" }}>
-                        {errField.surnameErr}
-                      </span>
-                    )}
-                  </div> */}
                 </div>
                 <div className="row mt-3">
                   <div className="col-md-8">
@@ -314,6 +310,22 @@ function PhotographerProfileEdit(props) {
                     )}
                   </div>
                   <div className="col-md-8">
+                    <label className="form-label">Email</label>
+                    <input
+                      className="form-control"
+                      type="text"
+                      name="user_email_id"
+                      autoComplete="off"
+                      value={inputField.user_email_id}
+                      onChange={inputHandler}
+                    />
+                    {errField.emailErr.length > 0 && (
+                      <span className="error" style={{ color: "red" }}>
+                        {errField.emailErr}
+                      </span>
+                    )}
+                  </div>
+                  <div className="col-md-8">
                     <label className="form-label">Phone Number</label>
                     <input
                       className="form-control"
@@ -326,6 +338,22 @@ function PhotographerProfileEdit(props) {
                     {errField.numberErr.length > 0 && (
                       <span className="error" style={{ color: "red" }}>
                         {errField.numberErr}
+                      </span>
+                    )}
+                  </div>
+                  <div className="col-md-8">
+                    <label className="form-label">Language</label>
+                    <input
+                      className="form-control"
+                      type="text"
+                      name="language"
+                      autoComplete="off"
+                      value={inputField.language}
+                      onChange={inputHandler}
+                    />
+                    {errField.languageErr.length > 0 && (
+                      <span className="error" style={{ color: "red" }}>
+                        {errField.languageErr}
                       </span>
                     )}
                   </div>
