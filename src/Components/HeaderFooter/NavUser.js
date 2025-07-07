@@ -1,65 +1,51 @@
-import { useContext, useState, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthProvider";
-import UserContext from "../../UserContext";
+import { getSessionData } from "../../Utils/Utils";
 
 function UserIcon() {
-  console.log("UserIcon");
+  const [user, setUser] = useState(null);
   const { setAuth } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [ready, setReady] = useState(false);
+
+  const sessionData = getSessionData("USER_DATA");
 
   useEffect(() => {
-    const sessionUser = sessionStorage.getItem("user");
-    if (sessionUser) {
-      const parsedUser = JSON.parse(sessionUser);
-      setUser(parsedUser);
+    if (sessionData) {
+      setUser(sessionData);
     }
-  }, [setUser]);
-
+  }, [sessionData]);
   const handleLogout = () => {
-    sessionStorage.removeItem("user");
-    setUser(null);
+    sessionStorage.removeItem("USER_DATA");
     setAuth(false);
     navigate("/Login");
   };
 
-  // const UloginHandler = () => {
-  //   setReady(true);
-  // };
-
-  const sessionData = JSON.parse(sessionStorage.getItem("user"));
-
-  console.log("sessionData", sessionData);
-  if (sessionData && sessionData.id > 0) {
+  if (user && user.name) {
     return (
       <div className="d-flex">
         <div className="dropdown">
-          <Link
-            className="nav-link dropdown-toggle"
-            to="#"
-            role="button"
+          <button
+            className="btn nav-link dropdown-toggle text-light"
+            type="button"
             data-bs-toggle="dropdown"
             aria-expanded="false"
           >
-            {sessionData.user_name}
-          </Link>
+            {user.name}
+          </button>
           <ul className="dropdown-menu bg-dark">
-            {/* {sessionData.user_type !== "customer" && ( */}
             <li>
               <Link
                 className="dropdown-item text-light"
                 to={
-                  sessionData.user_type !== "customer"
-                    ? "photographer_profile"
+                  user.user_type !== "customer"
+                    ? "/photographer_profile"
                     : "/client-profile"
                 }
               >
                 Profile info
               </Link>
             </li>
-            {/* )} */}
             <li>
               <Link
                 className="dropdown-item text-light"
@@ -78,20 +64,12 @@ function UserIcon() {
       <div className="d-flex">
         <ul className="navbar-nav">
           <li className="nav-item">
-            <Link
-              className="nav-link "
-              style={{ textDecoration: "none" }}
-              to="/login"
-            >
+            <Link className="nav-link" to="/login">
               Login
             </Link>
           </li>
           <li className="nav-item">
-            <Link
-              className="nav-link "
-              style={{ textDecoration: "none" }}
-              to="/signup"
-            >
+            <Link className="nav-link" to="/signup">
               Sign up
             </Link>
           </li>

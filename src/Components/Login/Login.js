@@ -5,6 +5,7 @@ import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthProvider";
+import { removeSessionData, setSessionData } from "../../Utils/Utils";
 // import { PhotographerProtectedRoute, ClientProtectedRoute } from "./ProtectedRoutes";
 
 const AppLogin = () => {
@@ -18,7 +19,6 @@ const AppLogin = () => {
     setTimeout(() => {
       setIsLoading(false);
     }, 1000);
-    console.log("Success:", values);
     handleLogin(values);
   };
 
@@ -31,14 +31,14 @@ const AppLogin = () => {
         email: values.email,
         password: values.password,
       });
-      console.log("response.data :>> ", response.data);
+
       if (response.data.success) {
-        sessionStorage.setItem("user", JSON.stringify(response.data.user));
+        setSessionData("USER_DATA", response?.data?.user);
         notification.success({
           message: "Login Success",
           description: response.data.message,
         });
-        console.log("response.data :>> ", response.data);
+
         if (response.data.user.user_type === "photographer") {
           navigate("/photographer_profile");
         } else {
@@ -75,8 +75,9 @@ const AppLogin = () => {
       },
     });
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("user");
+  const handleLogout = (e) => {
+    e.preventDefault();
+    removeSessionData("USER_DATA");
     // setUser(false);
     setAuth(false);
     navigate("/Login");
@@ -89,7 +90,11 @@ const AppLogin = () => {
           <h2 className="text-center mb-4 ">
             Welcome, {auth.currentUser.name}!
           </h2>
-          <Button type="primary" htmlType="button" onClick={handleLogout}>
+          <Button
+            type="primary"
+            htmlType="button"
+            onClick={(e) => handleLogout(e)}
+          >
             Logout
           </Button>
         </div>
