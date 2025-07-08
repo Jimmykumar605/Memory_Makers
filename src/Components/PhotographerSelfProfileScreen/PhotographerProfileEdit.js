@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import { message, notification } from "antd";
-import { getSessionData } from "../../Utils/Utils";
+import { getSessionData, apiPost, setSessionData } from "../../Utils/Utils";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function PhotographerProfileEdit(props) {
   const [imageFile, setImageFile] = useState();
   const [previewImage, setPreviewImage] = useState(null);
+    const navigate = useNavigate();
   const [inputField, setInputField] = useState({
-    user_name: "",
-    user_email_id: "",
-    user_phone_no: "",
-    user_location: "",
+    name: "",
+    email: "",
+    phone: "",
+    city: "",
     language: "",
-    userImageUrl: "",
+    profileImage: "",
   });
 
   // Helper function for email validation
@@ -38,21 +40,21 @@ function PhotographerProfileEdit(props) {
       languageErr: ""
     });
 
-    if (inputField.user_name === "") {
+    if (inputField.name === "") {
       formIsValid = false;
       setErrField((prevState) => ({
         ...prevState,
         nameErr: "Please enter name",
       }));
     }
-    if (inputField.user_location === "") {
+    if (inputField.city === "") {
       formIsValid = false;
       setErrField((prevState) => ({
         ...prevState,
         cityErr: "Please enter your city",
       }));
     }
-    if (inputField.user_phone_no === "") {
+    if (inputField.phone === "") {
       formIsValid = false;
       setErrField((prevState) => ({
         ...prevState,
@@ -61,13 +63,13 @@ function PhotographerProfileEdit(props) {
     }
 
     // Email validation
-    if (inputField.user_email_id === "") {
+    if (inputField.email === "") {
       formIsValid = false;
       setErrField((prevState) => ({
         ...prevState,
         emailErr: "Please enter your email",
       }));
-    } else if (!isValidEmail(inputField.user_email_id)) {
+    } else if (!isValidEmail(inputField.email)) {
       formIsValid = false;
       setErrField((prevState) => ({
         ...prevState,
@@ -91,17 +93,16 @@ function PhotographerProfileEdit(props) {
   const updateInputField = (user_details) => {
     setInputField((prevInputField) => ({
       ...prevInputField,
-      user_name: user_details?.name,
-      user_email_id: user_details?.email,
-      user_phone_no: user_details?.phone,
-      user_location: user_details?.city,
+      name: user_details?.name,
+      email: user_details?.email,
+      phone: user_details?.phone,
+      city: user_details?.city,
       language: user_details?.language,
-      userImageUrl: user_details?.userImageUrl,
+      profileImage: user_details?.profileImage,
     }));
   };
   useEffect(() => {
     const user_details = getSessionData("USER_DATA");
-    console.log("user_details :>> ", user_details);
     updateInputField(user_details);
   }, []); 
   const inputHandler = (e) => {
@@ -118,34 +119,28 @@ function PhotographerProfileEdit(props) {
   const submitButton = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     if (validForm()) {
       const formDetails = Object.fromEntries(formData.entries());
-      Object.assign(inputField, props);
       const userData = getSessionData("USER_DATA");
-      const url = `http://localhost:9000/update/photographer/${userData._id}`;
 
         try {
           // Create a single FormData object for all data
           const formData = new FormData();
-          formData.append("name", formDetails.user_name);
-          formData.append("email", formDetails.user_email_id);
-          formData.append("phone", formDetails.user_phone_no);
-          formData.append("city", formDetails.user_location);
+          formData.append("name", formDetails.name);
+          formData.append("email", formDetails.email);
+          formData.append("phone", formDetails.phone);
+          formData.append("city", formDetails.city);
           formData.append("language", formDetails.language);          
           // Add image file if it exists
           if (imageFile) {
             formData.append("profile", imageFile);
           }
 
-          // Send all data in a single request
-          const res = await axios.post(url, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
+          const res = await apiPost({
+            endpoint: `/update/photographer/${userData._id}`,
+            data: formData,
           });
-        console.log('res :>>', res);
-        if (res.data && res.data.success) {
+          if (res.data && res.data.success) {
           notification.success({
             message: "Profile Updated Successfully",
             description: res.data.message,
@@ -154,40 +149,15 @@ function PhotographerProfileEdit(props) {
           // Update the session data
           const updatedSessionData = {
             ...userData,
-            user_name: formDetails.user_name,
-            user_email_id: formDetails.user_email_id,
-            user_phone_no: formDetails.user_phone_no,
-            user_location: formDetails.user_location,
+            name: formDetails.name,
+            email: formDetails.email,
+            phone: formDetails.phone,
+            city: formDetails.city,
             language: formDetails.language,
-            userImageUrl: res.data.userImageUrl
+            profileImage: res.data.user.profileImage
           };
-          sessionStorage.setItem("USER_DATA", JSON.stringify(updatedSessionData));
-
-          try {
-            // Redirect to profile page
-            window.location.href = "/photographer_profile";
-          } catch (error) {
-            throw new Error(error.message || "Failed to update profile");
-          }
-
-          try {
-            let sessionValues = getSessionData("USER_DATA");
-            let UpdateSessionObject = {
-              ...sessionValues,
-              user_location: formDetails.user_location,
-              user_phone_no: formDetails.user_phone_no,
-              user_name: formDetails.user_name,
-              language: formDetails.language,
-              userImageUrl: res.data.userImageUrl
-            };
-            let updated_inputs_string = JSON.stringify(UpdateSessionObject);
-            sessionStorage.setItem("user", updated_inputs_string);
-          } catch (error) {
-            notification.error({
-              message: "Update Failed",
-              description: error.message || "Failed to update session data",
-            });
-          }
+          setSessionData("USER_DATA", updatedSessionData);
+          navigate("/photographer_profile");
         } else {
           notification.error({
             message: "Update Failed",
@@ -223,7 +193,7 @@ function PhotographerProfileEdit(props) {
                   className="rounded-circle mt-5"
                   width="250px"
                   alt=""
-                  src={inputField.userImageUrl}
+                  src={inputField.profileImage}
                 />
                 <div>
                   <div class="d-flex justify-content-center mb-4">
@@ -237,7 +207,7 @@ function PhotographerProfileEdit(props) {
                       />
                     ) : (
                       <img
-                        src="./images/photographer/photographer1.jpg"
+                        src={`http://localhost:9000/${inputField.profileImage}`}
                         className="rounded-circle"
                         style={{ width: "200px", height: "200px" }}
                       />
@@ -280,9 +250,9 @@ function PhotographerProfileEdit(props) {
                     <input
                       className="form-control"
                       type="text"
-                      name="user_name"
+                      name="name"
                       autoComplete="off"
-                      value={inputField.user_name}
+                      value={inputField.name}
                       onChange={inputHandler}
                     />
                     {errField.nameErr.length > 0 && (
@@ -298,9 +268,9 @@ function PhotographerProfileEdit(props) {
                     <input
                       className="form-control"
                       type="text"
-                      name="user_location"
+                      name="city"
                       autoComplete="off"
-                      value={inputField.user_location}
+                      value={inputField.city}
                       onChange={inputHandler}
                     />
                     {errField.cityErr.length > 0 && (
@@ -314,9 +284,9 @@ function PhotographerProfileEdit(props) {
                     <input
                       className="form-control"
                       type="text"
-                      name="user_email_id"
+                      name="email"
                       autoComplete="off"
-                      value={inputField.user_email_id}
+                      value={inputField.email}
                       onChange={inputHandler}
                     />
                     {errField.emailErr.length > 0 && (
@@ -330,9 +300,9 @@ function PhotographerProfileEdit(props) {
                     <input
                       className="form-control"
                       type="text"
-                      name="user_phone_no"
+                      name="phone"
                       autoComplete="off"
-                      value={inputField.user_phone_no}
+                      value={inputField.phone}
                       onChange={inputHandler}
                     />
                     {errField.numberErr.length > 0 && (

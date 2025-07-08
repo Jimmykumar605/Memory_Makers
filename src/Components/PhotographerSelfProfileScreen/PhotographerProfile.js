@@ -19,7 +19,7 @@ function PhotographerProfile() {
       console.log("error :>> ", error);
     }
   }, []);
-console.log("user :>> ", user);
+
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
