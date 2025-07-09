@@ -2,7 +2,9 @@ import React from "react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
-import { apiGet, apiPost, getSessionData } from "../../Utils/Utils";
+import { apiGet, apiPost, apiDelete, getSessionData } from "../../Utils/Utils";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEye, faTrash } from '@fortawesome/free-solid-svg-icons'
 import "./PhotographerProfile.css";
 function PhotographerProfile() {
   const [user, setUser] = useState({});
@@ -11,6 +13,10 @@ function PhotographerProfile() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [hoveredImage, setHoveredImage] = useState(null);
+  const [fullScreenImage, setFullScreenImage] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [imageToDelete, setImageToDelete] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const fetchImages = async () => {
@@ -56,6 +62,31 @@ function PhotographerProfile() {
     }
   }, [selectedCategory]);
 
+  const handleDeleteImage = async () => {
+    if (!imageToDelete) return;
+
+    try {
+      setLoading(true);
+      const response = await apiDelete({
+        endpoint: `/photographers/delete-image`,
+        data: {
+          imageId: imageToDelete,
+          photographerId: user._id,
+          category: selectedCategory
+        },
+      });
+      if (response.data && response.data.success) {
+        fetchImages();
+        setDeleteModalOpen(false);
+        setImageToDelete(null);
+      }
+    } catch (error) {
+      console.error('Error deleting image:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleImageUpload = async (event) => {
     const files = Array.from(event.target.files);
     setSelectedFiles(files);
@@ -78,7 +109,6 @@ function PhotographerProfile() {
           });
           
           if (response.data.success == true) {
-            // Update progress for this file
             const newProgress = [...uploadProgress];
             newProgress[index] = 100;
             setUploadProgress(newProgress);
@@ -159,11 +189,33 @@ function PhotographerProfile() {
               {sImages.length > 0 ? 
                 <div className="image-preview">
               {sImages.map((image, index) => (
-                  <img
-                    src={`http://localhost:9000/${image?.imageUrl}`}
-                    alt="preview"
-                    className="preview-image"
-                  />
+                  <div 
+                    key={image._id}
+                    className="image-container"
+                    onMouseEnter={() => setHoveredImage(image._id)}
+                    onMouseLeave={() => setHoveredImage(null)}
+                  >
+                    <div className="image-wrapper">
+                      <img
+                        src={`http://localhost:9000/${image?.imageUrl}`}
+                        alt="preview"
+                        className="preview-image"
+                      />
+                    </div>
+                    {hoveredImage === image._id && (
+                      <div className="image-actions">
+                        <button className="action-btn edit-btn" title="View Full Screen" onClick={() => setFullScreenImage(image.imageUrl)}>
+                          <FontAwesomeIcon icon={faEye} />
+                        </button>
+                        <button className="action-btn delete-btn" title="Delete" onClick={() => {
+                          setImageToDelete(image._id);
+                          setDeleteModalOpen(true);
+                        }}>
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
               ))}
                 </div>
               : <p>No images uploaded yet</p>}
@@ -197,6 +249,56 @@ function PhotographerProfile() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && (
+        <><div className="modal fade show d-block" role="dialog" style={{ display: 'block' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content bg-dark text-white">
+              <div className="modal-header">
+                <h5 className="modal-title" id="deleteModalLabel">Are you sure?</h5>
+                <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onClick={() => {
+                  setDeleteModalOpen(false);
+                  setImageToDelete(null);
+                } }></button>
+              </div>
+              <div className="modal-body">
+                <p>Are you sure you want to delete this image? This action cannot be undone.</p>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => {
+                  setDeleteModalOpen(false);
+                  setImageToDelete(null);
+                } }>No</button>
+                <button type="button" className="btn btn-danger" onClick={handleDeleteImage}>Yes</button>
+              </div>
+            </div>
+          </div>
+        </div><div className="modal-backdrop fade show"></div></>
+      )}
+
+      {/* Full Screen Image Modal */}
+      {fullScreenImage && (
+        <><div className="modal fade show d-block" role="dialog" style={{ display: 'block' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg" role="document" style={{ backgroundColor: '#1a1a1a' }}>
+            <div className="modal-content" style={{ backgroundColor: '#1a1a1a', color: 'white' }}>
+              <div className="modal-header">
+                <h5 className="modal-title text-white">Image Viewer</h5>
+                <button onClick={() => setFullScreenImage(null)} type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div className="modal-body text-white">
+                <div className="text-center">
+                  <img
+                    src={`http://localhost:9000/${fullScreenImage}`}
+                    alt="full screen"
+                    className="img-fluid"
+                    style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div><div className="modal-backdrop fade show"></div></>
+      )}
     </>
   );
 }

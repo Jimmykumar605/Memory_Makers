@@ -98,3 +98,41 @@ export const apiGet = async ({
     }
   }
 };
+
+// API utility function for DELETE requests
+export const apiDelete = async ({
+  endpoint,
+  data = null,
+  baseURL = "http://localhost:9000",
+}) => {
+  try {
+    const res = await axios.delete(`${baseURL}${endpoint}`, {
+      data: data,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    return res;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        status,
+        message: data.message || "Something went wrong",
+        error: data.error || null,
+        data,
+      };
+    } else if (error.request) {
+      console.log("No response received from server");
+      return {
+        status: 0,
+        message: "No response received from server",
+        error: null,
+        data: null,
+      };
+    } else {
+      console.log("Error", error.message);
+      throw error;
+    }
+  }
+};
