@@ -9,6 +9,8 @@ function PhotographerProfile() {
   const [sImages, setImages] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('Wedding');
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const fetchImages = async () => {
@@ -55,29 +57,47 @@ function PhotographerProfile() {
   }, [selectedCategory]);
 
   const handleImageUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+    const files = Array.from(event.target.files);
+    setSelectedFiles(files);
+    if (files.length === 0) return;
 
     setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
-      formData.append('category', selectedCategory);
-      formData.append('photographerId', user._id);
+    setUploadProgress(files.map(() => 0));
 
-      const response = await apiPost({
-        endpoint: '/photographers/upload-image',
-        data: formData
+    try {
+      const uploadPromises = files.map(async (file, index) => {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('category', selectedCategory);
+        formData.append('photographerId', user._id);
+
+        try {
+          const response = await apiPost({
+            endpoint: '/photographers/upload-image',
+            data: formData
+          });
+          
+          if (response.data.success == true) {
+            // Update progress for this file
+            const newProgress = [...uploadProgress];
+            newProgress[index] = 100;
+            setUploadProgress(newProgress);
+          } else {
+            throw new Error(response.data.message || 'Upload failed');
+          }
+        } catch (error) {
+          console.error(`Error uploading image ${index + 1}:`, error);
+          throw error;
+        }
       });
-      if (response.data.success == true) {
-        fetchImages();
-      } else {
-        throw new Error(response.data.message || 'Upload failed');
-      }
+
+      await Promise.all(uploadPromises);
+      fetchImages();
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error('Error uploading images:', error);
     } finally {
       setUploading(false);
+      setUploadProgress([]);
     }
   };
 
@@ -152,6 +172,7 @@ function PhotographerProfile() {
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleImageUpload}
                   className="upload-input"
                   id="image-upload"
@@ -161,7 +182,16 @@ function PhotographerProfile() {
                 </label>
               </div>
               <div className="upload-status">
-                {uploading && <p>Uploading...</p>}
+                {uploading && (
+                  <div>
+                    <p>Uploading {selectedFiles.length} images...</p>
+                    {uploadProgress.map((progress, index) => (
+                      <div key={index} className="progress-bar">
+                        <div className="progress" style={{ width: `${progress}%` }}></div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
