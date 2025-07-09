@@ -266,8 +266,8 @@
 
 .image-actions {
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: 45%;
+  left: 26%;
   display: flex;
   gap: 10px;
   z-index: 10;
@@ -307,7 +307,30 @@
   color: #dc3545;
 }
 
+.modal-image {
+  border-radius: 8px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
 
+.modal-image:hover {
+  transform: scale(1.02);
+}
+
+.close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modal-body:hover .close-btn {
+  opacity: 1;
+}
 
 .close-btn:hover {
   transform: scale(1.1);
