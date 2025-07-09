@@ -29,17 +29,72 @@ export const removeSessionData = (session_key) => {
 export const apiPost = async ({
   endpoint,
   data = null,
-  baseURL = 'http://localhost:9000',
+  baseURL = "http://localhost:9000",
 }) => {
   try {
     const res = await axios.post(`${baseURL}${endpoint}`, data, {
       headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+        'Content-Type': 'multipart/form-data',
+      },
     });
+    return res; // Full Axios response (res.data is your payload)
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        status,
+        message: data.message || "Something went wrong",
+        error: data.error || null,
+        data,
+      };
+    } else if (error.request) {
+      console.error("No response from server:", error.message);
+      return {
+        status: 0,
+        message: "No response from server",
+        error: error.message,
+      };
+      } else {
+      return {
+        status: 0,
+        message: "Unexpected error occurred",
+        error: error.message,
+      };
+    }
+  }
+};
+
+// API utility function
+export const apiGet = async ({
+  endpoint,
+  params = {},
+  baseURL = "http://localhost:9000",
+}) => {
+  try {
+    const res = await axios.get(`${baseURL}${endpoint}`, { params });
     return res;
   } catch (error) {
-    console.error('API Error:', error);
-    throw error;
+    if (error.response) {
+      const { status, data } = error.response;
+
+      return {
+        status,
+        message: data.message || "Something went wrong",
+        error: data.error || null,
+        data,
+      };
+    } else if (error.request) {
+        return {
+        status: 0,
+        message: "No response from server",
+        error: error.message,
+      };
+    } else {
+        return {
+        status: 0,
+        message: "Unexpected error occurred",
+        error: error.message,
+      };
+    }
   }
 };

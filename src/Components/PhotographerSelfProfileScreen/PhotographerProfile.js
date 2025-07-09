@@ -1,10 +1,8 @@
 import React from "react";
 import { useState } from "react";
-import photographer_data from "../../assets/Photographers";
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
-import { getSessionData } from "../../Utils/Utils";
-import axios from "axios";
+import { apiGet, apiPost, getSessionData } from "../../Utils/Utils";
 import "./PhotographerProfile.css";
 function PhotographerProfile() {
   const [user, setUser] = useState({});
@@ -18,15 +16,15 @@ function PhotographerProfile() {
 
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:9000/photographers/${user._id}/images/${selectedCategory}`);
-      console.log("response :>> ", response);
+      const response = await apiGet({
+        endpoint: `/photographers/${user._id}/images/${selectedCategory}`
+      });
       if (response.data.success == true) {
         setImages(response.data.images);
       } else {
         setImages([]);
       }
     } catch (error) {
-      setImages([]);
       console.error('Error fetching images:', error);
     } finally {
       setLoading(false);
@@ -44,14 +42,12 @@ function PhotographerProfile() {
     }
   }, []);
 
-  // Fetch images when user data is loaded
   useEffect(() => {
     if (user._id) {
       fetchImages();
     }
   }, [user._id]);
 
-  // Fetch images when category changes
   useEffect(() => {
     if (user._id) {
       fetchImages();
@@ -69,10 +65,9 @@ function PhotographerProfile() {
       formData.append('category', selectedCategory);
       formData.append('photographerId', user._id);
 
-      const response = await axios.post('http://localhost:9000/photographers/upload-image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const response = await apiPost({
+        endpoint: '/photographers/upload-image',
+        data: formData
       });
       if (response.data.success == true) {
         fetchImages();
@@ -94,7 +89,6 @@ function PhotographerProfile() {
             <div className="loading-spinner"></div>
           </div>
         )}
-        {/* Header Section */}
         <div className="photographer-header">
           <div className="photographer-info">
             <div className="photographer-image">
@@ -122,7 +116,6 @@ function PhotographerProfile() {
           </div>
         </div>
 
-        {/* Gallery Filter Section */}
         <div className="gallery-filters">
           <div className="filter-buttons">
             {['Wedding', 'Pre-Wedding', 'Portfolio', 'Ring Ceremony', 'Birthday', 'Baby-Shower'].map(category => (
@@ -140,20 +133,20 @@ function PhotographerProfile() {
           </div>
         </div>
 
-        {/* Gallery Section */}
         <div className="gallery-section">
           <div className="photographer-work">
             <div className="upload-section">
-            <div className="image-preview">
-                {sImages.map((image, index) => (
+              {sImages.length > 0 ? 
+                <div className="image-preview">
+              {sImages.map((image, index) => (
                   <img
-                    key={index}
                     src={`http://localhost:9000/${image?.imageUrl}`}
                     alt="preview"
                     className="preview-image"
                   />
-                ))}
-              </div>
+              ))}
+                </div>
+              : <p>No images uploaded yet</p>}
               <h4>Upload Your Latest Images</h4>
               <div className="upload-container">
                 <input
