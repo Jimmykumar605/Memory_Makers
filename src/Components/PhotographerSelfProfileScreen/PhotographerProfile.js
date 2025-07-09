@@ -4,10 +4,34 @@ import photographer_data from "../../assets/Photographers";
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import { getSessionData } from "../../Utils/Utils";
+import axios from "axios";
 import "./PhotographerProfile.css";
 function PhotographerProfile() {
   const [user, setUser] = useState({});
   const [sImages, setImages] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('Wedding');
+  const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const fetchImages = async () => {
+    if (!user._id) return;
+
+    try {
+      setLoading(true);
+      const response = await axios.get(`http://localhost:9000/photographers/${user._id}/images/${selectedCategory}`);
+      console.log("response :>> ", response);
+      if (response.data.success == true) {
+        setImages(response.data.images);
+      } else {
+        setImages([]);
+      }
+    } catch (error) {
+      setImages([]);
+      console.error('Error fetching images:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     try {
@@ -20,20 +44,56 @@ function PhotographerProfile() {
     }
   }, []);
 
-  const handleImageUpload = (event) => {
+  // Fetch images when user data is loaded
+  useEffect(() => {
+    if (user._id) {
+      fetchImages();
+    }
+  }, [user._id]);
+
+  // Fetch images when category changes
+  useEffect(() => {
+    if (user._id) {
+      fetchImages();
+    }
+  }, [selectedCategory]);
+
+  const handleImageUpload = async (event) => {
     const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImages(prevImages => [...prevImages, reader.result]);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('category', selectedCategory);
+      formData.append('photographerId', user._id);
+
+      const response = await axios.post('http://localhost:9000/photographers/upload-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      if (response.data.success == true) {
+        fetchImages();
+      } else {
+        throw new Error(response.data.message || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+    } finally {
+      setUploading(false);
     }
   };
 
   return (
     <>
       <div className="photographer-details-container">
+        {loading && (
+          <div className="loading-overlay">
+            <div className="loading-spinner"></div>
+          </div>
+        )}
         {/* Header Section */}
         <div className="photographer-header">
           <div className="photographer-info">
@@ -65,48 +125,18 @@ function PhotographerProfile() {
         {/* Gallery Filter Section */}
         <div className="gallery-filters">
           <div className="filter-buttons">
-            <button
-              type="button"
-              className="filter-btn active"
-              onClick={() => setImages([])}
-            >
-              Wedding
-            </button>
-            <button
-              type="button"
-              className="filter-btn"
-              onClick={() => setImages([])}
-            >
-              Pre-Wedding
-            </button>
-            <button
-              type="button"
-              className="filter-btn"
-              onClick={() => setImages([])}
-            >
-              Portfolio
-            </button>
-            <button
-              type="button"
-              className="filter-btn"
-              onClick={() => setImages([])}
-            >
-              Ring Ceremony
-            </button>
-            <button
-              type="button"
-              className="filter-btn"
-              onClick={() => setImages([])}
-            >
-              Birthday
-            </button>
-            <button
-              type="button"
-              className="filter-btn"
-              onClick={() => setImages([])}
-            >
-              Baby-Shower
-            </button>
+            {['Wedding', 'Pre-Wedding', 'Portfolio', 'Ring Ceremony', 'Birthday', 'Baby-Shower'].map(category => (
+              <button
+                key={category}
+                type="button"
+                className={`filter-btn ${selectedCategory === category ? 'active' : ''}`}
+                onClick={() => {
+                  setSelectedCategory(category);
+                }}
+              >
+                {category}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -114,22 +144,31 @@ function PhotographerProfile() {
         <div className="gallery-section">
           <div className="photographer-work">
             <div className="upload-section">
-              <h4>Upload Your Latest Images</h4>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="upload-input"
-              />
-              <div className="image-preview">
+            <div className="image-preview">
                 {sImages.map((image, index) => (
                   <img
                     key={index}
-                    src={image}
+                    src={`http://localhost:9000/${image?.imageUrl}`}
                     alt="preview"
                     className="preview-image"
                   />
                 ))}
+              </div>
+              <h4>Upload Your Latest Images</h4>
+              <div className="upload-container">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="upload-input"
+                  id="image-upload"
+                />
+                <label htmlFor="image-upload" className="upload-btn">
+                  Choose Image
+                </label>
+              </div>
+              <div className="upload-status">
+                {uploading && <p>Uploading...</p>}
               </div>
             </div>
           </div>
