@@ -4,15 +4,16 @@ import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import { apiGet, apiPost, apiDelete, getSessionData } from "../../Utils/Utils";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faTrash, faAdd } from '@fortawesome/free-solid-svg-icons'
 import "./PhotographerProfile.css";
 function PhotographerProfile() {
   const [user, setUser] = useState({});
   const [sImages, setImages] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('Wedding');
+  const [selectedCategory, setSelectedCategory] = useState('Top Best Images');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [selectedImageId, setSelectedImageId] = useState(null);
   const [hoveredImage, setHoveredImage] = useState(null);
   const [fullScreenImage, setFullScreenImage] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -54,13 +55,37 @@ function PhotographerProfile() {
     if (user._id) {
       fetchImages();
     }
-  }, [user._id]);
+  }, [selectedCategory]);
 
   useEffect(() => {
     if (user._id) {
       fetchImages();
     }
-  }, [selectedCategory]);
+  }, [user._id]);
+
+  const addToPortfolio = async (imageId) => {
+    try {
+      const formData = new FormData();
+      formData.append('imageId', imageId?._id);
+      formData.append('category', selectedCategory);
+      formData.append('userId', user._id);
+      const response = await apiPost({
+        endpoint: `/add_to_best_images`,
+        data: formData
+      });
+      
+      if (response.data.success == true) {
+        // Refresh the images to show the updated portfolio status
+        fetchImages();
+        // Close the modal
+        setFullScreenImage(null);
+      } else {
+        console.error('Server response:', response);
+      }
+    } catch (error) {
+      console.error('Error adding to portfolio:', error);
+    }
+  };
 
   const handleDeleteImage = async () => {
     if (!imageToDelete) return;
@@ -75,7 +100,7 @@ function PhotographerProfile() {
           category: selectedCategory
         },
       });
-      if (response.data && response.data.success) {
+      if (response.data.success == true) {
         fetchImages();
         setDeleteModalOpen(false);
         setImageToDelete(null);
@@ -168,7 +193,7 @@ function PhotographerProfile() {
 
         <div className="gallery-filters">
           <div className="filter-buttons">
-            {['Wedding', 'Pre-Wedding', 'Portfolio', 'Ring Ceremony', 'Birthday', 'Baby-Shower'].map(category => (
+            {['Top Best Images','Wedding', 'Pre-Wedding', 'Portfolio', 'Ring Ceremony', 'Birthday', 'Baby-Shower'].map(category => (
               <button
                 key={category}
                 type="button"
@@ -204,7 +229,7 @@ function PhotographerProfile() {
                     </div>
                     {hoveredImage === image._id && (
                       <div className="image-actions">
-                        <button className="action-btn edit-btn" title="View Full Screen" onClick={() => setFullScreenImage(image.imageUrl)}>
+                        <button className="action-btn edit-btn" title="View Full Screen" onClick={() => setFullScreenImage(image)}>
                           <FontAwesomeIcon icon={faEye} />
                         </button>
                         <button className="action-btn delete-btn" title="Delete" onClick={() => {
@@ -284,12 +309,23 @@ function PhotographerProfile() {
             <div className="modal-content" style={{ backgroundColor: '#1a1a1a', color: 'white' }}>
               <div className="modal-header">
                 <h5 className="modal-title text-white">Image Viewer</h5>
+                <button 
+                      onClick={() => {
+                      // Extract the image ID from the fullScreenImage path
+                      const imageId = fullScreenImage;
+                      addToPortfolio(imageId);
+                    }} 
+                      className="btn rounded-square p-2"
+                      style={{ backgroundColor: '#0d6efd', borderColor: '#0d6efd' }}
+                    >
+                      <FontAwesomeIcon icon={faAdd} />
+                    </button>
                 <button onClick={() => setFullScreenImage(null)} type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div className="modal-body text-white">
                 <div className="text-center">
                   <img
-                    src={`http://localhost:9000/${fullScreenImage}`}
+                    src={`http://localhost:9000/${fullScreenImage?.imageUrl}`}
                     alt="full screen"
                     className="img-fluid"
                     style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }} />

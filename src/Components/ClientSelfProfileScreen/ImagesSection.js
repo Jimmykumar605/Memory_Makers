@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import photographer_data from "../../assets/Photographers";
+import React, { useState, useEffect } from "react";
+import { apiGet } from "../../Utils/Utils";
 // import Swiper core and required modules
 import { Navigation, Pagination, Scrollbar, A11y } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -12,14 +12,37 @@ import "swiper/css/scrollbar";
 import { Link } from "react-router-dom";
 
 const ImageSections = () => {
-  const [person, setPerson] = useState(photographer_data);
+  const [person, setPerson] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPhotographers = async () => {
+      try {
+        const response = await apiGet({
+          endpoint: "/all_photographers",
+          baseURL: "http://localhost:9000"
+        });
+        if(response?.data?.success === true){
+          setPerson(response?.data?.photographers);
+        }else{
+          setPerson([]);
+        }
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPhotographers();
+  }, []);
   const sessionData = JSON.parse(sessionStorage.getItem("user"));
   // console.log(sessionData);
   return (
     <>
       <div className="">
         <div>
-          {person.map((data) => (
+          {person.length > 0 ? person.map((data) => (
             <div className="container row pt-5 d-flex align-items-center mt-5 rr">
               <div className="image_full_screen">
                 {/* Full screen image dispalyed  */}
@@ -163,7 +186,7 @@ const ImageSections = () => {
                   <Link to={sessionData ? "/photographer_details" : "/login"}>
                     <img
                       className="profile-pic"
-                      src={data.img}
+                      src={"http://localhost:9000/" + data.profileImage}
                       alt={data.name}
                     />
                   </Link>
@@ -231,7 +254,15 @@ const ImageSections = () => {
                 </div>
               </div>
             </div>
-          ))}
+          )) : (
+            <div className="text-center py-5">
+              <div className="text-muted mb-3">
+                <i className="fas fa-camera fa-4x"></i>
+              </div>
+              <h5 className="text-muted">No Photographers Found</h5>
+              <p className="text-muted">It seems there are no photographers available at the moment.</p>
+            </div>
+          )}
         </div>
       </div>
     </>

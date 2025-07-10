@@ -44,7 +44,7 @@ export const apiPost = async ({
       return {
         status,
         message: data.message || "Something went wrong",
-        error: data.error || null,
+        error: true,
         data,
       };
     } else if (error.request) {
@@ -52,13 +52,13 @@ export const apiPost = async ({
       return {
         status: 0,
         message: "No response from server",
-        error: error.message,
+        error: true,
       };
       } else {
       return {
         status: 0,
         message: "Unexpected error occurred",
-        error: error.message,
+        error: true,
       };
     }
   }
@@ -80,20 +80,19 @@ export const apiGet = async ({
       return {
         status,
         message: data.message || "Something went wrong",
-        error: data.error || null,
-        data,
+        data: {success: false},
       };
     } else if (error.request) {
         return {
         status: 0,
         message: "No response from server",
-        error: error.message,
+        data: {success: false},
       };
     } else {
         return {
         status: 0,
         message: "Unexpected error occurred",
-        error: error.message,
+        data: {success: false},
       };
     }
   }
@@ -119,20 +118,22 @@ export const apiDelete = async ({
       return {
         status,
         message: data.message || "Something went wrong",
-        error: data.error || null,
-        data,
+        data: {success: false},
       };
     } else if (error.request) {
       console.log("No response received from server");
       return {
         status: 0,
         message: "No response received from server",
-        error: null,
-        data: null,
+        data: {success: false},
       };
     } else {
       console.log("Error", error.message);
-      throw error;
+      return {
+        status: 0,
+        message: "Unexpected error occurred",
+        data: {success: false},
+      };
     }
   }
 };
