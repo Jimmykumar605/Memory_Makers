@@ -74,62 +74,15 @@ const ImageSections = () => {
                           // onSwiper={(swiper) => console.log(swiper)}
                           // onSlideChange={() => console.log("slide change")}
                         >
+                          {data?.best_images?.map((data) => (
                           <SwiperSlide>
                             <img
                               className="innerphoto"
-                              src={data.img1}
+                              src={"http://localhost:9000/" + data.imageUrl}
                               alt=""
                             />
                           </SwiperSlide>
-                          <SwiperSlide>
-                            <img
-                              className="innerphoto"
-                              src={data.img2}
-                              alt=""
-                            />
-                          </SwiperSlide>
-                          <SwiperSlide>
-                            <img
-                              className="innerphoto"
-                              src={data.img3}
-                              alt=""
-                            />
-                          </SwiperSlide>
-                          <SwiperSlide>
-                            <img
-                              className="innerphoto"
-                              src={data.img4}
-                              alt=""
-                            />
-                          </SwiperSlide>
-                          <SwiperSlide>
-                            <img
-                              className="innerphoto"
-                              src={data.img5}
-                              alt=""
-                            />
-                          </SwiperSlide>
-                          <SwiperSlide>
-                            <img
-                              className="innerphoto"
-                              src={data.img6}
-                              alt=""
-                            />
-                          </SwiperSlide>
-                          <SwiperSlide>
-                            <img
-                              className="innerphoto"
-                              src={data.img7}
-                              alt=""
-                            />
-                          </SwiperSlide>
-                          <SwiperSlide>
-                            <img
-                              className="innerphoto"
-                              src={data.img8}
-                              alt=""
-                            />
-                          </SwiperSlide>
+                        ))}
                         </Swiper>
                       </div>
                     </div>
@@ -196,42 +149,16 @@ const ImageSections = () => {
                     {data.city},{data.country}
                   </p>
                   <div className="row p-data">
+                  {data?.best_images?.map((data) => (
                     <div className="col-col-12 col-md-4">
                       <img
                         data-bs-toggle="modal"
                         data-bs-target="#exampleModal"
                         className="rounded-2 photocrsl"
-                        src={data.img1}
-                        alt={data.name}
+                        src={"http://localhost:9000/" + data.imageUrl}
                       />
                     </div>
-                    <div className="col-col-12 col-md-4">
-                      <img
-                        data-bs-toggle="modal"
-                        data-bs-target="#exampleModal"
-                        className="rounded-2 photocrsl"
-                        src={data.img2}
-                        alt={data.name}
-                      />
-                    </div>
-                    <div className="col-col-12 col-md-4">
-                      <img
-                        data-bs-toggle="modal"
-                        data-bs-target="#exampleModal"
-                        className="rounded-2 photocrsl"
-                        src={data.img3}
-                        alt={data.name}
-                      />
-                    </div>
-                    <div className="col-col-12 col-md-4">
-                      <img
-                        data-bs-toggle="modal"
-                        data-bs-target="#exampleModal"
-                        className="rounded-2 photocrsl"
-                        src={data.img4}
-                        alt={data.name}
-                      />
-                    </div>
+                  ))}
                   </div>
                   <div className="row">
                     <div className="col-6 mt-3">

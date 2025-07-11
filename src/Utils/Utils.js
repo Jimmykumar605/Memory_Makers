@@ -98,6 +98,45 @@ export const apiGet = async ({
   }
 };
 
+// API utility function for PUT requests
+export const apiPut = async ({
+  endpoint,
+  data = null,
+  baseURL = "http://localhost:9000",
+}) => {
+  try {
+    const res = await axios.put(`${baseURL}${endpoint}`, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        status,
+        message: data.message || "Something went wrong",
+        error: true,
+        data,
+      };
+    } else if (error.request) {
+      console.error("No response from server:", error.message);
+      return {
+        status: 0,
+        message: "No response from server",
+        error: true,
+      };
+    } else {
+      return {
+        status: 0,
+        message: "Unexpected error occurred",
+        error: true,
+      };
+    }
+  }
+};
+
 // API utility function for DELETE requests
 export const apiDelete = async ({
   endpoint,
