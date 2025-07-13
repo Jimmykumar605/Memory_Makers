@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { apiGet } from "../../Utils/Utils";
+import { apiGet, getSessionData } from "../../Utils/Utils";
 // import Swiper core and required modules
 import { Navigation, Pagination, Scrollbar, A11y } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -36,8 +36,7 @@ const ImageSections = () => {
 
     fetchPhotographers();
   }, []);
-  const sessionData = JSON.parse(sessionStorage.getItem("user"));
-  // console.log(sessionData);
+  const sessionData = getSessionData("USER_DATA");
   return (
     <>
       <div className="">
@@ -132,11 +131,11 @@ const ImageSections = () => {
               <div className="row">
                 <div className="col-12 col-md-3">
                   <div className="text-center photographer_name">
-                    <Link to={sessionData ? "/photographer_details" : "/login"}>
+                    <Link to={sessionData ? `/photographer_details/${data._id}` : "/login"}>
                       {data.name}
                     </Link>
                   </div>
-                  <Link to={sessionData ? "/photographer_details" : "/login"}>
+                  <Link to={sessionData ? `/photographer_details/${data._id}` : "/login"}>
                     <img
                       className="profile-pic"
                       src={"http://localhost:9000/" + data.profileImage}
@@ -168,8 +167,8 @@ const ImageSections = () => {
                       <Link
                         to={
                           sessionData
-                            ? "/photographer_details"
-                            : "/photographer_details"
+                            ? `/photographer_details/${data._id}`
+                            : `/login`
                         }
                       >
                         <button className="visit-btn btn">Visit profile</button>

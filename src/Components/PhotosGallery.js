@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 function PhotosGallery(props) {
-  const { imageData } = props;
+  const imageData = props?.images;
   const [gallery, setGallery] = useState([]);
 
   useEffect(() => {
@@ -15,7 +15,7 @@ function PhotosGallery(props) {
         {gallery.map((items) => {
           return (
             <div key={items.id}>
-              <img className="zoom" src={items.image} alt={items.description} />
+              <img className="zoom" src={"http://localhost:9000/" + items} alt={items} />
             </div>
           );
         })}

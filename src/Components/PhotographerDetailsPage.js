@@ -1,108 +1,108 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import PhotosGallery from "./PhotosGallery";
-import { mainphotographers } from "../Config/config";
-import {
-  mainimages,
-  babyshower,
-  wedding,
-  prewedding,
-  portfolio,
-  birthday,
-  ringcermony,
-} from "../Config/config";
+import { apiGet } from "../Utils/Utils";
 
 function PhotographerDetailsPage() {
-  // console.log(mainimages);
-  const [sImages, setImages] = useState(mainimages);
+  const { id } = useParams();
+  const [sImages, setImages] = useState({});
+  const [photographer, setPhotographer] = useState(null);
+  const [selected, setSelected] = useState('');
+
+  useEffect(() => {
+    const fetchPhotographer = async () => {
+      try {
+        const response = await apiGet({
+          endpoint: `/photographers/${id}`,
+          baseURL: "http://localhost:9000",
+        });
+
+        if (response?.data?.success === true) {
+          const data = response.data;
+
+          // Dynamically categorize based on actual category names from data
+          const categorizedImages = {};
+
+          data.images.forEach((img) => {
+            const category = img.category;
+            if (!categorizedImages[category]) {
+              categorizedImages[category] = [];
+            }
+            categorizedImages[category].push(img.imageUrl);
+          });
+
+          setImages(categorizedImages);
+
+          const firstAvailableCategory = Object.keys(categorizedImages)[0];
+          setSelected(firstAvailableCategory || '');
+
+          setPhotographer(data);
+        } else {
+          setPhotographer(null);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    fetchPhotographer();
+  }, [id]);
 
   return (
-    <>
-      <div className="container">
-        <div className="text-center">
-          <div className="row pt-5 d-flex align-items-center para-line">
-            <div className="col-4 image_width">
+    <div className="container">
+      <div className="text-center">
+        <div className="row pt-5 d-flex align-items-center para-line">
+          <div className="col-4 image_width">
+            <div className="photographer-image">
               <img
-                src={mainphotographers[0].image}
+                src={"http://localhost:9000/" + photographer?.profileImage}
                 className="rounded-circle"
                 alt="photographer"
               />
             </div>
-            <div className="col-8 text-start experience">
-              <h2>Photographer {mainphotographers[0].name}</h2>
-              <h5> {mainphotographers[0].city}</h5>
-              <p className="text-justify"> {mainphotographers[0].bio}</p>
-              <div>
-                <p> {mainphotographers[0].experience}</p>
-                <p>{mainphotographers[0].language}</p>
-                <p>{mainphotographers[0].email}</p>
-                <p>{mainphotographers[0].phone}</p>
-              </div>
+          </div>
+          <div className="col-8 text-start experience">
+            <h2>Photographer {photographer?.name}</h2>
+            <h5>{photographer?.city}</h5>
+            <p className="text-justify">{photographer?.bio}</p>
+            <div>
+              <p>{photographer?.experience}</p>
+              <p>{photographer?.language}</p>
+              <p>{photographer?.email}</p>
+              <p>{photographer?.phone}</p>
             </div>
           </div>
         </div>
-        <div className="headingbutton text-center m-3">
-          <div className="d-grid gap-5 d-md-block ">
-            <button
-              type="button"
-              className="btn button6"
-              onClick={() => {
-                setImages(wedding);
-              }}
-            >
-              Wedding
-            </button>
-            <button
-              type="button"
-              className="btn button6"
-              onClick={() => {
-                setImages(prewedding);
-              }}
-            >
-              Pre-Wedding
-            </button>
-            <button
-              type="button"
-              className="btn button6"
-              onClick={() => {
-                setImages(portfolio);
-              }}
-            >
-              Portfolio
-            </button>
-            <button
-              type="button"
-              className="btn button6"
-              onClick={() => {
-                setImages(ringcermony);
-              }}
-            >
-              Ring Ceremony
-            </button>
-            <button
-              type="button"
-              className="btn button6"
-              onClick={() => {
-                setImages(birthday);
-              }}
-            >
-              Birthday
-            </button>
-            <button
-              type="button"
-              className="btn button6"
-              onClick={() => {
-                setImages(babyshower);
-              }}
-            >
-              Baby-Shower
-            </button>
+      </div>
+
+      <div className="row mt-5">
+        <div className="col-12">
+          <h3 className="text-center mb-4">Photographer's Work</h3>
+          <div className="row">
+            <div className="col-12 mb-3 d-flex flex-wrap gap-2 justify-content-center">
+              {Object.keys(sImages).map((categoryKey) => (
+                <button
+                  key={categoryKey}
+                  type="button"
+                  className={`btn button6 ${selected === categoryKey ? "active" : ""}`}
+                  onClick={() => setSelected(categoryKey)}
+                >
+                  {categoryKey}
+                </button>
+              ))}
+            </div>
+
+            <div className="col-12">
+              {sImages[selected]?.length > 0 ? (
+                <PhotosGallery images={sImages[selected]} />
+              ) : (
+                <p className="text-center">No images available for this category.</p>
+              )}
+            </div>
           </div>
         </div>
-        <div>
-          <PhotosGallery imageData={sImages} />
-        </div>
       </div>
-    </>
+    </div>
   );
 }
 

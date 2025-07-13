@@ -72,7 +72,7 @@ function App() {
           <Route path="/photographers_grid" element={<PhotographersGrids />} />
           <Route path="user_info" element={<ClientProfile />} />
           <Route
-            path="/photographer_details"
+            path="/photographer_details/:id"
             element={<PhotographerDetailsPage />}
           />
           <Route path="change_profile" element={<ClientProEdit />} />
