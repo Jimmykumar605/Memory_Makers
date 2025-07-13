@@ -13,6 +13,7 @@ const initialValues = {
   phone: "",
   city: "",
   language: "",
+  experience: "",
 };
 
 export default function Photographers(props) {
@@ -36,6 +37,7 @@ export default function Photographers(props) {
               city: values.city,
               language: values.language,
               user_login_id: values.email,
+              experience: values.experience,
               user_type: "photographer",
             })
             .then((response) => {
@@ -151,6 +153,22 @@ export default function Photographers(props) {
                   required
                 />
                 {errors.phone && touched.phone && <p>{errors.phone}</p>}
+              </div>
+              <div className="col">
+                <label className="form-label">Enter Experience</label>
+                <input
+                  className="form-control "
+                  type="tel"
+                  autoComplete="off"
+                  name="experience"
+                  id="experience"
+                  // placeholder="Phone Number"
+                  value={values.experience}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  required
+                />
+                {errors.experience && touched.experience && <p>{errors.experience}</p>}
               </div>
               <div className="col">
                 <label className="form-label">Enter City</label>
