@@ -148,7 +148,7 @@ const ImageSections = () => {
                     {data.city},{data.country}
                   </p>
                   <div className="row p-data">
-                  {data?.best_images?.map((data) => (
+                  {data?.best_images?.length > 0 ? data?.best_images?.map((data) => (
                     <div className="col-col-12 col-md-4">
                       <img
                         data-bs-toggle="modal"
@@ -157,11 +157,18 @@ const ImageSections = () => {
                         src={data.imageUrl}
                       />
                     </div>
-                  ))}
+                  )) : (
+                    <div className="col-col-12 col-md-4">
+                      <div className="text-center rounded-2 photocrsl">
+                        No images available
+                      </div>
+                    </div>
+                  )}
                   </div>
                   <div className="row">
                     <div className="col-6 mt-3">
                       <h6 className="p-text-content">{data.content}</h6>
+                      <h4 className="stat-item">Experience: {data.experience}</h4>
                     </div>
                     <div className="col-6 text-end mt-4">
                       <Link
@@ -173,8 +180,6 @@ const ImageSections = () => {
                       >
                         <button className="visit-btn btn">Visit profile</button>
                       </Link>
-                      {/* )} */}
-                      {/* <button className=" btn btn-primary">Send request</button> */}
                     </div>
                   </div>
                 </div>

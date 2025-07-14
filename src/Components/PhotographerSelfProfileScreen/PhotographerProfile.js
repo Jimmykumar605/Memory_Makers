@@ -202,6 +202,7 @@ function PhotographerProfile() {
               <h5 className="photographer-location">{user?.city}</h5>
               <p className="photographer-bio">{user?.bio}</p>
               <div className="photographer-stats">
+                <p className="stat-item">Experience: {user?.experience}</p>
                 <p className="stat-item">Phone: {user?.phone}</p>
                 <p className="stat-item">Email: {user?.email}</p>
                 <p className="stat-item">Language: {user?.language}</p>

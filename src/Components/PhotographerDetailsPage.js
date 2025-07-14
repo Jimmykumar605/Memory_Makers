@@ -62,14 +62,14 @@ function PhotographerDetailsPage() {
             </div>
           </div>
           <div className="col-8 text-start experience">
-            <h2>Photographer {photographer?.name}</h2>
-            <h5>{photographer?.city}</h5>
+            <h2>{photographer?.name}</h2>
+            <h5>City: {photographer?.city}</h5>
             <p className="text-justify">{photographer?.bio}</p>
             <div>
-              <p>{photographer?.experience}</p>
-              <p>{photographer?.language}</p>
-              <p>{photographer?.email}</p>
-              <p>{photographer?.phone}</p>
+              <p>Experience: {photographer?.experience}</p>
+              <p>Phone: {photographer?.phone}</p>
+              <p>Email: {photographer?.email}</p>
+              <p>Language: {photographer?.language}</p>
             </div>
           </div>
         </div>
