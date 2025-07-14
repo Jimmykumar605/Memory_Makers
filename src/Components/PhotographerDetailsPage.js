@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import PhotosGallery from "./PhotosGallery";
+import ImageGrid from "./ImageGrid";
 import { apiGet } from "../Utils/Utils";
 
 function PhotographerDetailsPage() {
@@ -94,7 +94,7 @@ function PhotographerDetailsPage() {
 
             <div className="col-12">
               {sImages[selected]?.length > 0 ? (
-                <PhotosGallery images={sImages[selected]} />
+                <ImageGrid images={sImages[selected]} />
               ) : (
                 <p className="text-center">No images available for this category.</p>
               )}
