@@ -55,7 +55,7 @@ function PhotographerDetailsPage() {
           <div className="col-4 image_width">
             <div className="photographer-image">
               <img
-                src={"http://localhost:9000/" + photographer?.profileImage}
+                src={photographer?.profileImage}
                 className="rounded-circle"
                 alt="photographer"
               />

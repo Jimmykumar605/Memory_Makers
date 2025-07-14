@@ -15,7 +15,7 @@ function PhotosGallery(props) {
         {gallery.map((items) => {
           return (
             <div key={items.id}>
-              <img className="zoom" src={"http://localhost:9000/" + items} alt={items} />
+              <img className="zoom" src={items} alt={items} />
             </div>
           );
         })}

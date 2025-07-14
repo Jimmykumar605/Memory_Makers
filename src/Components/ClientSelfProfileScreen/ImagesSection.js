@@ -77,7 +77,7 @@ const ImageSections = () => {
                           <SwiperSlide>
                             <img
                               className="innerphoto"
-                              src={"http://localhost:9000/" + data.imageUrl}
+                              src={data.imageUrl}
                               alt=""
                             />
                           </SwiperSlide>
@@ -138,7 +138,7 @@ const ImageSections = () => {
                   <Link to={sessionData ? `/photographer_details/${data._id}` : "/login"}>
                     <img
                       className="profile-pic"
-                      src={"http://localhost:9000/" + data.profileImage}
+                      src={data.profileImage}
                       alt={data.name}
                     />
                   </Link>
@@ -154,7 +154,7 @@ const ImageSections = () => {
                         data-bs-toggle="modal"
                         data-bs-target="#exampleModal"
                         className="rounded-2 photocrsl"
-                        src={"http://localhost:9000/" + data.imageUrl}
+                        src={data.imageUrl}
                       />
                     </div>
                   ))}

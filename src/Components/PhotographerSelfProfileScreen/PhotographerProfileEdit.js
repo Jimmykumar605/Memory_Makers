@@ -16,6 +16,7 @@ function PhotographerProfileEdit(props) {
     city: "",
     language: "",
     profileImage: "",
+    experience: "",
   });
 
   // Helper function for email validation
@@ -28,7 +29,8 @@ function PhotographerProfileEdit(props) {
     cityErr: "",
     numberErr: "",
     emailErr: "",
-    languageErr: ""
+    languageErr: "",
+    experienceErr: ""
   });
   const validForm = () => {
     let formIsValid = true;
@@ -37,7 +39,8 @@ function PhotographerProfileEdit(props) {
       cityErr: "",
       numberErr: "",
       emailErr: "",
-      languageErr: ""
+      languageErr: "",
+      experienceErr: ""
     });
 
     if (inputField.name === "") {
@@ -85,7 +88,13 @@ function PhotographerProfileEdit(props) {
         languageErr: "Please enter your language",
       }));
     }
-
+    if (inputField.experience === "") {
+      formIsValid = false;
+      setErrField((prevState) => ({
+        ...prevState,
+        experienceErr: "Please enter your experience",
+      }));
+    }
     return formIsValid;
   };
 
@@ -99,6 +108,7 @@ function PhotographerProfileEdit(props) {
       city: user_details?.city,
       language: user_details?.language,
       profileImage: user_details?.profileImage,
+      experience: user_details?.experience,
     }));
   };
   useEffect(() => {
@@ -130,7 +140,8 @@ function PhotographerProfileEdit(props) {
           formData.append("email", formDetails.email);
           formData.append("phone", formDetails.phone);
           formData.append("city", formDetails.city);
-          formData.append("language", formDetails.language);          
+          formData.append("language", formDetails.language);   
+          formData.append("experience", formDetails.experience);       
           // Add image file if it exists
           if (imageFile) {
             formData.append("profile", imageFile);
@@ -154,6 +165,7 @@ function PhotographerProfileEdit(props) {
             phone: formDetails.phone,
             city: formDetails.city,
             language: formDetails.language,
+            experience: formDetails.experience,
             profileImage: res.data.user.profileImage
           };
           setSessionData("USER_DATA", updatedSessionData);
@@ -207,7 +219,7 @@ function PhotographerProfileEdit(props) {
                       />
                     ) : (
                       <img
-                        src={`http://localhost:9000/${inputField.profileImage}`}
+                        src={inputField.profileImage}
                         className="rounded-circle"
                         style={{ width: "200px", height: "200px" }}
                       />
@@ -308,6 +320,22 @@ function PhotographerProfileEdit(props) {
                     {errField.numberErr.length > 0 && (
                       <span className="error" style={{ color: "red" }}>
                         {errField.numberErr}
+                      </span>
+                    )}
+                  </div>
+                  <div className="col-md-8">
+                    <label className="form-label">Experience</label>
+                    <input
+                      className="form-control"
+                      type="text"
+                      name="experience"
+                      autoComplete="off"
+                      value={inputField.experience}
+                      onChange={inputHandler}
+                    />
+                    {errField.experienceErr.length > 0 && (
+                      <span className="error" style={{ color: "red" }}>
+                        {errField.experienceErr}
                       </span>
                     )}
                   </div>

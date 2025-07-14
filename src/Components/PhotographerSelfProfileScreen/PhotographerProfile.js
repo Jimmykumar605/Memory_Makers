@@ -192,7 +192,7 @@ function PhotographerProfile() {
           <div className="photographer-info">
             <div className="photographer-image">
               <img
-                src={`http://localhost:9000/${user?.profileImage}`}
+                src={`${user?.profileImage}`}
                 className="rounded-circle"
                 alt={user?.name}
               />
@@ -246,7 +246,7 @@ function PhotographerProfile() {
                   >
                     <div className="image-wrapper">
                       <img
-                        src={`http://localhost:9000/${image?.imageUrl}`}
+                        src={image?.imageUrl}
                         alt="preview"
                         className="preview-image"
                       />
@@ -362,7 +362,7 @@ function PhotographerProfile() {
               <div className="modal-body text-white">
                 <div className="text-center">
                   <img
-                    src={`http://localhost:9000/${fullScreenImage?.imageUrl}`}
+                    src={fullScreenImage?.imageUrl}
                     alt="full screen"
                     className="img-fluid"
                     style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }} />
