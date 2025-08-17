@@ -145,7 +145,7 @@ const ImageSections = () => {
                 </div>
                 <div className="col-12 col-md-9">
                   <p className="location-data">
-                    {data.city},{data.country}
+                    {data.city}
                   </p>
                   <div className="row p-data">
                   {data?.best_images?.length > 0 ? data?.best_images?.map((data) => (
