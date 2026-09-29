@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { Star, MapPin, CheckCircle, ArrowRight, ShieldCheck, Heart } from "lucide-react";
+import { Star, MapPin, CheckCircle, ArrowRight, ShieldCheck, Heart, Briefcase } from "lucide-react";
 import LazyImage from "@/components/LazyImage";
 import { Photographer } from "@/lib/types";
 
@@ -87,24 +87,35 @@ export default function PhotographerCard({ photographer, onQuickInquire }: Photo
       <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
         <div>
           {/* Photographer Avatar & Identity Header */}
-          <div className="flex items-start gap-3">
-            <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-emerald-400/40 shrink-0">
-              <LazyImage
-                src={photographer.avatarUrl}
-                alt={photographer.name}
-                fill
-                sizes="48px"
-                className="object-cover"
-                showLogoWhileLoading={false}
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <h3 className="text-base font-semibold text-white truncate group-hover:text-emerald-300 transition-colors">
-                  {photographer.businessName}
-                </h3>
+          <div className="flex items-start justify-between gap-2.5">
+            <div className="flex items-start gap-3 min-w-0 flex-1">
+              <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-emerald-400/40 shrink-0">
+                <LazyImage
+                  src={photographer.avatarUrl}
+                  alt={photographer.name}
+                  fill
+                  sizes="48px"
+                  className="object-cover"
+                  showLogoWhileLoading={false}
+                />
               </div>
-              <p className="text-xs text-zinc-400 truncate">by {photographer.name}</p>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <h3 className="text-base font-semibold text-white truncate group-hover:text-emerald-300 transition-colors">
+                    {photographer.businessName}
+                  </h3>
+                </div>
+                <p className="text-xs text-zinc-400 truncate">by {photographer.name}</p>
+              </div>
+            </div>
+
+            {/* Experience Badge */}
+            <div
+              className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[11px] font-mono font-medium shadow-sm"
+              title={`${photographer.experienceYears ?? 1} Years of Experience`}
+            >
+              <Briefcase className="w-3 h-3 text-emerald-400 shrink-0" />
+              <span>{photographer.experienceYears ?? 1} {(photographer.experienceYears ?? 1) === 1 ? "Yr" : "Yrs"} Exp</span>
             </div>
           </div>
 
