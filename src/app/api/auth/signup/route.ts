@@ -37,6 +37,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (role === "photographer") {
+      const cleanPhone = (phone || "").trim();
+      if (!cleanPhone) {
+        return NextResponse.json(
+          { error: "Mobile number is compulsory for photographer registration." },
+          { status: 400 }
+        );
+      }
+      const digitsOnly = cleanPhone.replace(/\D/g, "");
+      if (digitsOnly.length < 10) {
+        return NextResponse.json(
+          { error: "Please provide a valid 10-digit mobile number for photographer verification." },
+          { status: 400 }
+        );
+      }
+    }
+
     const normEmail = email.trim().toLowerCase();
 
     // Prevent self-registration of admin accounts through public signup
@@ -81,11 +98,12 @@ export async function POST(req: NextRequest) {
 
     // 3. Create record in public.users table in Supabase PostgreSQL
     const hashedPassword = password ? hashPassword(password) : undefined;
+    const cleanPhone = phone ? phone.trim() : undefined;
     const userToSave = {
       id: authUserId || "usr-" + Date.now(),
       name,
       email: normEmail,
-      phone: phone || undefined,
+      phone: cleanPhone,
       role: role as any,
       city,
       state,
@@ -120,7 +138,7 @@ export async function POST(req: NextRequest) {
         businessName: biz,
         slug: `${rawSlug}-${Date.now().toString().slice(-4)}`,
         email: normEmail,
-        phone: phone || "+91 98000 00000",
+        phone: cleanPhone || "+91 98000 00000",
         status: "pending", // strictly pending for Master Admin approval!
         appliedDate: "Just now (" + new Date().toLocaleDateString("en-IN") + ")",
         city,

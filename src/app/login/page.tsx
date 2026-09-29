@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Camera, Sparkles, Heart, ArrowRight, ShieldCheck, Mail, Lock, User, Loader2, LogOut, Clock, RefreshCw, Eye, EyeOff } from "lucide-react";
+import { Camera, Sparkles, Heart, ArrowRight, ShieldCheck, Mail, Lock, User, Loader2, LogOut, Clock, RefreshCw, Eye, EyeOff, Phone } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { PRIMARY_REGIONS, ALL_INDIAN_STATES } from "@/lib/data";
 
@@ -23,6 +23,7 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [businessName, setBusinessName] = useState("");
+  const [phone, setPhone] = useState("");
   const [state, setState] = useState("Punjab");
   const [city, setCity] = useState("Amritsar");
   const [startingPrice, setStartingPrice] = useState(55000);
@@ -48,12 +49,28 @@ function LoginContent() {
 
     try {
       if (isSignUp) {
+        if (role === "photographer") {
+          const trimmedPhone = phone.trim();
+          if (!trimmedPhone) {
+            setErrorMsg("Mobile number is compulsory for photographer registration.");
+            setLoading(false);
+            return;
+          }
+          const digits = trimmedPhone.replace(/\D/g, "");
+          if (digits.length < 10) {
+            setErrorMsg("Please enter a valid 10-digit mobile number for photographer verification.");
+            setLoading(false);
+            return;
+          }
+        }
+
         // Dynamic Signup via /api/auth/signup API connected to Supabase DB
         const res = await signup({
           name: fullName,
           email,
           password,
           role,
+          phone: phone.trim(),
           state,
           city,
           businessName: role === "photographer" ? businessName : undefined,
@@ -343,6 +360,24 @@ function LoginContent() {
                               onChange={(e) => setBusinessName(e.target.value)}
                               placeholder="e.g. Amritsar Cine Arts or Royal Heritage Visuals"
                               className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 transition-all"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1 flex items-center justify-between">
+                            <span>Mobile / WhatsApp Number *</span>
+                            <span className="text-[10px] text-emerald-400 font-sans font-medium">Compulsory for Verification</span>
+                          </label>
+                          <div className="relative">
+                            <Phone className="w-4 h-4 text-emerald-400/60 absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
+                            <input
+                              type="tel"
+                              required
+                              value={phone}
+                              onChange={(e) => setPhone(e.target.value)}
+                              placeholder="+91 98765 43210"
+                              className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 transition-all font-mono"
                             />
                           </div>
                         </div>
