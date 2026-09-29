@@ -26,8 +26,8 @@ textarea {
 
 /* Force dark theme for browser autofill (Chrome, Edge, Safari, Brave, Firefox) */
 input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus, 
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
 input:-webkit-autofill:active,
 textarea:-webkit-autofill,
 textarea:-webkit-autofill:hover,
@@ -157,9 +157,11 @@ select:autofill {
   0% {
     transform: translateX(-100%);
   }
+
   50% {
     transform: translateX(0%);
   }
+
   100% {
     transform: translateX(100%);
   }
@@ -169,6 +171,7 @@ select:autofill {
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(200%);
   }
@@ -180,4 +183,503 @@ select:autofill {
 
 .animate-shimmer {
   animation: shimmerSweep 2s ease-in-out infinite;
+}
+
+/* ========================================================================== */
+/* LIGHT THEME LUXURY PALETTE & OVERRIDES (HIGH CONTRAST EDITORIAL)           */
+/* ========================================================================== */
+
+html.light,
+html.light body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Dim heavy glowing blur circles in light mode for a clean look */
+html.light .blur-3xl,
+html.light .blur-\[130px\],
+html.light .blur-\[140px\] {
+  opacity: 0.15 !important;
+}
+
+/* Core background resets for light mode */
+html.light .bg-\[\#040507\],
+html.light .bg-\[\#050607\],
+html.light .bg-\[\#030405\],
+html.light .bg-\[\#040605\],
+html.light .bg-\[\#060807\] {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Surfaces, Card Boxes & Interactive Panels */
+html.light .bg-\[\#070b09\],
+html.light .bg-\[\#080d0a\],
+html.light .bg-\[\#090d0b\],
+html.light .bg-\[\#060907\],
+html.light .bg-\[\#0d1410\] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Glassmorphism Panels in Light Mode */
+html.light .glass-panel {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.02) !important;
+}
+
+html.light .glass-panel-green,
+html.light .glass-panel-gold {
+  background: radial-gradient(circle at 50% 0%, #ecfdf5 0%, #ffffff 100%) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.08) !important;
+}
+
+/* ========================================================================== */
+/* CRITICAL: PHOTO CARD OVERLAY TEXT MUST STAY WHITE IN LIGHT MODE            */
+/* ========================================================================== */
+
+/* Occasion Cards, Living Gallery Photos, and Photographer Cover Overlays */
+html.light .photo-overlay-content,
+html.light .photo-overlay-content *,
+html.light .photo-overlay-content h1,
+html.light .photo-overlay-content h2,
+html.light .photo-overlay-content h3,
+html.light .photo-overlay-content h4,
+html.light .photo-overlay-content h5,
+html.light .photo-overlay-content h6,
+html.light .photo-overlay-content p,
+html.light .photo-overlay-content .text-white,
+html.light .photo-overlay-content .text-zinc-100,
+html.light .photo-overlay-content .text-zinc-200,
+html.light .photo-overlay-content .text-zinc-300,
+html.light .photo-overlay-content .text-zinc-400 {
+  color: #ffffff !important;
+}
+
+/* Emerald accents on dark photo overlays remain luminous */
+html.light .photo-overlay-content .text-emerald-400,
+html.light .photo-overlay-content .text-emerald-300 {
+  color: #34d399 !important;
+}
+
+/* Badges and action buttons on top of photo cards */
+html.light .photo-overlay-content .bg-black\/60,
+html.light .photo-overlay-content .bg-black\/70,
+html.light .photo-overlay-content .bg-black\/80 {
+  background-color: rgba(0, 0, 0, 0.72) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* ========================================================================== */
+/* GENERAL TYPOGRAPHY FOR LIGHT MODE (NON-OVERLAYS)                           */
+/* ========================================================================== */
+
+html.light h1:not(.photo-overlay-content *),
+html.light h2:not(.photo-overlay-content *),
+html.light h3:not(.photo-overlay-content *),
+html.light h4:not(.photo-overlay-content *) {
+  color: #0f172a !important;
+}
+
+html.light .text-white:not(.photo-overlay-content *):not(.keep-white) {
+  color: #0f172a !important;
+}
+
+html.light .text-zinc-100:not(.photo-overlay-content *) {
+  color: #0f172a !important;
+}
+
+html.light .text-zinc-200:not(.photo-overlay-content *) {
+  color: #1e293b !important;
+}
+
+html.light .text-zinc-300:not(.photo-overlay-content *) {
+  color: #334155 !important;
+}
+
+html.light .text-zinc-400:not(.photo-overlay-content *) {
+  color: #475569 !important;
+}
+
+html.light .text-zinc-500:not(.photo-overlay-content *) {
+  color: #64748b !important;
+}
+
+/* Subheadings and eyebrow badges */
+html.light .text-emerald-400:not(.photo-overlay-content *) {
+  color: #047857 !important;
+}
+html.light .text-emerald-300:not(.photo-overlay-content *) {
+  color: #065f46 !important;
+}
+
+/* Headline gradient in Light Mode */
+html.light .green-gradient-text,
+html.light .gold-gradient-text {
+  background: linear-gradient(135deg, #0f172a 0%, #047857 50%, #065f46 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Top Hero Eyebrow Pill */
+html.light .inline-flex.rounded-full.glass-panel {
+  background: #ecfdf5 !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08) !important;
+}
+html.light .inline-flex.rounded-full.glass-panel span {
+  color: #047857 !important;
+  font-weight: 700 !important;
+}
+
+/* ========================================================================== */
+/* HERO SEARCH FORM IN LIGHT MODE                                             */
+/* ========================================================================== */
+
+html.light form.glass-panel {
+  background: #ffffff !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(16, 185, 129, 0.15) !important;
+}
+
+html.light form.glass-panel .sm\:border-r {
+  border-color: #e2e8f0 !important;
+}
+
+html.light form.glass-panel label {
+  color: #64748b !important;
+  font-weight: 700 !important;
+}
+
+html.light form.glass-panel select {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+html.light form.glass-panel select option,
+html.light form.glass-panel select optgroup {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* ========================================================================== */
+/* SPECIALTY CATEGORY FILTER BAR IN LIGHT MODE                                */
+/* ========================================================================== */
+
+/* Inactive category buttons */
+html.light button.bg-\[\#090e0b\] {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.light button.bg-\[\#090e0b\]:hover {
+  background-color: #f0fdf4 !important;
+  border-color: #34d399 !important;
+  color: #065f46 !important;
+}
+
+html.light button.bg-\[\#090e0b\] span,
+html.light button.bg-\[\#090e0b\] svg {
+  color: #334155 !important;
+}
+
+html.light button.bg-\[\#090e0b\]:hover span,
+html.light button.bg-\[\#090e0b\]:hover svg {
+  color: #065f46 !important;
+}
+
+/* Left and right chevron scroll buttons */
+html.light button.shrink-0.w-9.h-9 {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #334155 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light button.shrink-0.w-9.h-9:hover:not(:disabled) {
+  background-color: #f0fdf4 !important;
+  border-color: #10b981 !important;
+  color: #059669 !important;
+}
+
+/* Active category pill stays prominent emerald with black text */
+html.light button.bg-gradient-to-r {
+  color: #000000 !important;
+}
+
+/* ========================================================================== */
+/* PHOTOGRAPHER CARDS IN LIGHT MODE                                           */
+/* ========================================================================== */
+
+html.light .group.relative.rounded-2xl.glass-panel {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 15px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03) !important;
+}
+
+html.light .group.relative.rounded-2xl.glass-panel:hover {
+  border-color: rgba(16, 185, 129, 0.45) !important;
+  box-shadow: 0 20px 35px -10px rgba(16, 185, 129, 0.15) !important;
+}
+
+html.light .group.relative.rounded-2xl.glass-panel h3 {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+html.light .group.relative.rounded-2xl.glass-panel h3:hover {
+  color: #059669 !important;
+}
+
+html.light .group.relative.rounded-2xl.glass-panel p.text-xs {
+  color: #64748b !important;
+}
+
+html.light .group.relative.rounded-2xl.glass-panel .border-t {
+  border-color: #f1f5f9 !important;
+}
+
+/* Specialties pills in card body */
+html.light .group.relative.rounded-2xl.glass-panel .bg-white\/\[0\.04\] {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #334155 !important;
+  font-weight: 500 !important;
+}
+
+/* Portfolio button on card */
+html.light .group.relative.rounded-2xl.glass-panel a.bg-white\/\[0\.08\] {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+}
+
+html.light .group.relative.rounded-2xl.glass-panel a.bg-white\/\[0\.08\]:hover {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+}
+
+/* Inquire button on card */
+html.light .group.relative.rounded-2xl.glass-panel button[type="button"]:not([aria-label]) {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #065f46 !important;
+  font-weight: 600 !important;
+}
+
+html.light .group.relative.rounded-2xl.glass-panel button[type="button"]:not([aria-label]):hover {
+  background-color: #d1fae5 !important;
+  border-color: #34d399 !important;
+}
+
+/* Experience Badge */
+html.light .group.relative.rounded-2xl.glass-panel .bg-emerald-500\/10 {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+
+/* ========================================================================== */
+/* HOW IT WORKS & FAQ IN LIGHT MODE                                           */
+/* ========================================================================== */
+
+html.light #how-it-works .rounded-3xl.glass-panel {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light #how-it-works .rounded-3xl.glass-panel-green {
+  background: radial-gradient(circle at 50% 0%, #ecfdf5 0%, #ffffff 100%) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  box-shadow: 0 12px 35px -5px rgba(16, 185, 129, 0.08) !important;
+}
+
+html.light #how-it-works .rounded-full.bg-emerald-400\/20 {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border-color: #a7f3d0 !important;
+}
+
+html.light #how-it-works h4 {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+html.light #how-it-works p {
+  color: #475569 !important;
+}
+
+html.light #how-it-works a[href="/dashboard"] {
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light #how-it-works a[href="/dashboard"]:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #059669 !important;
+}
+
+/* FAQ Accordion Cards */
+html.light #faq .rounded-2xl.glass-panel {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+}
+
+html.light #faq button span {
+  color: #0f172a !important;
+}
+
+html.light #faq button .rounded-full {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #059669 !important;
+}
+
+html.light #faq div.border-t {
+  color: #334155 !important;
+  border-top-color: #f1f5f9 !important;
+}
+
+/* ========================================================================== */
+/* NAVBAR & HEADER IN LIGHT MODE                                              */
+/* ========================================================================== */
+
+html.light header.glass-panel {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.light header nav a {
+  color: #334155 !important;
+}
+
+html.light header nav a:hover {
+  color: #059669 !important;
+}
+
+html.light header .font-serif.tracking-widest {
+  color: #0f172a !important;
+}
+
+html.light header .font-serif.tracking-widest span {
+  color: #059669 !important;
+}
+
+html.light header a[href="/login"]:not([href*="role"]) {
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  background-color: transparent !important;
+}
+
+html.light header a[href="/login"]:not([href*="role"]):hover {
+  border-color: #059669 !important;
+  color: #059669 !important;
+  background-color: #ecfdf5 !important;
+}
+
+html.light header a[href*="role=photographer"] {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3) !important;
+}
+
+html.light header .h-5.w-px {
+  background-color: #e2e8f0 !important;
+}
+
+/* Navbar logo brand camera container */
+html.light header .bg-\[\#050907\] {
+  background-color: #0f172a !important;
+}
+
+/* ========================================================================== */
+/* FOOTER IN LIGHT MODE                                                       */
+/* ========================================================================== */
+
+html.light footer {
+  background-color: #f8fafc !important;
+  border-top: 1px solid #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+html.light footer .border-b {
+  border-bottom-color: #e2e8f0 !important;
+}
+
+html.light footer h4 {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+html.light footer a {
+  color: #475569 !important;
+}
+
+html.light footer a:hover {
+  color: #059669 !important;
+}
+
+html.light footer a[aria-label] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #475569 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light footer a[aria-label]:hover {
+  border-color: #34d399 !important;
+  color: #059669 !important;
+  background-color: #f0fdf4 !important;
+}
+
+/* ========================================================================== */
+/* FORM CONTROLS & INPUTS IN LIGHT MODE                                       */
+/* ========================================================================== */
+
+html.light input:not([type="checkbox"]):not([type="radio"]),
+html.light select,
+html.light textarea {
+  color-scheme: light !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light input:focus,
+html.light select:focus,
+html.light textarea:focus {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 1px #059669, 0 0 10px rgba(16, 185, 129, 0.2) !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+html.light select option,
+html.light select optgroup {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Custom Scrollbar in Light Mode */
+html.light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #059669;
 }
