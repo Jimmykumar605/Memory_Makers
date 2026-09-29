@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import LazyImage from "./LazyImage";
 import { X, Calendar, MapPin, DollarSign, CheckCircle2, Sparkles, Send } from "lucide-react";
 import { Photographer, OccasionType } from "@/lib/types";
 import { OCCASIONS } from "@/lib/data";
@@ -119,12 +120,13 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
             {/* Header info */}
             <div className="flex items-center gap-3.5 pb-5 border-b border-white/10">
               <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-emerald-400/40 shrink-0">
-                <Image
+                <LazyImage
                   src={photographer.avatarUrl}
                   alt={photographer.name}
                   fill
                   sizes="48px"
                   className="object-cover"
+                  showLogoWhileLoading={false}
                 />
               </div>
               <div>

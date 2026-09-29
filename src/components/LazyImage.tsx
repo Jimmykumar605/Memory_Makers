@@ -76,7 +76,7 @@ export default function LazyImage({
           src={src}
           alt={alt}
           loading={props.priority ? undefined : "lazy"}
-          unoptimized={props.unoptimized ?? (typeof src === "string" && (src.includes("supabase.co") || src.startsWith("data:")))}
+          unoptimized={props.unoptimized ?? (typeof src === "string" && (!src.startsWith("/") && !src.includes("images.unsplash.com")))}
           onLoad={() => setIsLoading(false)}
           onError={() => {
             setIsLoading(false);
