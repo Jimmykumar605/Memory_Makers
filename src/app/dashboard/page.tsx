@@ -68,6 +68,13 @@ export default function PhotographerDashboardPage() {
   const [bio, setBio] = useState("");
   const [city, setCity] = useState("");
   const [stateRegion, setStateRegion] = useState("Punjab");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [gender, setGender] = useState<string>("male");
+  const [experienceYears, setExperienceYears] = useState<number>(3);
+  const [instagram, setInstagram] = useState("");
+  const [website, setWebsite] = useState("");
+  const [youtube, setYoutube] = useState("");
   const [startingPrice, setStartingPrice] = useState(0);
   const [willingToTravel, setWillingToTravel] = useState(true);
   const [specialties, setSpecialties] = useState<OccasionType[]>(["Wedding"]);
@@ -120,6 +127,13 @@ export default function PhotographerDashboardPage() {
     setBio(p.bio || "");
     setCity(p.city || "");
     setStateRegion(p.state || "Punjab");
+    setPhone(p.phone || "");
+    setEmail(p.email || "");
+    setGender(p.gender || "male");
+    setExperienceYears(p.experienceYears || 3);
+    setInstagram(p.socialLinks?.instagram || "");
+    setWebsite(p.socialLinks?.website || "");
+    setYoutube(p.socialLinks?.youtube || "");
     setStartingPrice(p.startingPrice || 0);
     setWillingToTravel(p.willingToTravel ?? true);
     setSpecialties(p.specialties || ["Wedding"]);
@@ -417,6 +431,10 @@ export default function PhotographerDashboardPage() {
       bio,
       city,
       state: stateRegion,
+      phone: phone.trim(),
+      email: email.trim(),
+      gender,
+      experienceYears: Number(experienceYears) || 0,
       startingPrice,
       willingToTravel,
       specialties,
@@ -425,6 +443,11 @@ export default function PhotographerDashboardPage() {
       portfolio,
       packages,
       gearList,
+      socialLinks: {
+        instagram: instagram.trim(),
+        website: website.trim(),
+        youtube: youtube.trim(),
+      },
     };
 
     updatePhotographerStudio(activePhotographerId, updates);
@@ -620,6 +643,8 @@ export default function PhotographerDashboardPage() {
               <p className="text-xs text-zinc-400 mt-0.5">
                 Logged in as <span className="text-zinc-200">{artistName || user?.name || "Visual Artisan"}</span>
                 {city ? ` • ${city}, ${stateRegion}` : ` • ${stateRegion}`}
+                {experienceYears ? ` • ${experienceYears} Yrs Exp` : ""}
+                {gender ? ` • ${gender.charAt(0).toUpperCase() + gender.slice(1)}` : ""}
               </p>
             </div>
           </div>
@@ -859,17 +884,74 @@ export default function PhotographerDashboardPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
-                Editorial Tagline
-              </label>
-              <input
-                type="text"
-                value={tagline}
-                onChange={(e) => setTagline(e.target.value)}
-                placeholder="e.g. Sacred Anand Karaj Stories • Royal Punjabi Weddings"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
+                  Editorial Tagline
+                </label>
+                <input
+                  type="text"
+                  value={tagline}
+                  onChange={(e) => setTagline(e.target.value)}
+                  placeholder="e.g. Sacred Anand Karaj Stories • Royal Punjabi Weddings"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
+                  Photographer Gender
+                </label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 font-mono cursor-pointer"
+                >
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
+                  Years of Experience
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="60"
+                  value={experienceYears || ""}
+                  onChange={(e) => setExperienceYears(parseInt(e.target.value) || 0)}
+                  placeholder="e.g. 5"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 font-mono"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
+                  Contact Mobile / WhatsApp
+                </label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="e.g. +91 98765 43210"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 font-mono"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
+                  Official Studio Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="studio@example.com"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 font-mono"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -974,6 +1056,51 @@ export default function PhotographerDashboardPage() {
                     </button>
                   );
                 })}
+              </div>
+            </div>
+
+            {/* Social Links & Online Portfolios */}
+            <div className="pt-2 border-t border-white/10">
+              <h4 className="text-xs font-mono uppercase tracking-wider text-emerald-400 mb-3 font-semibold">
+                Social Links & Online Portfolios
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
+                    Instagram Handle / URL
+                  </label>
+                  <input
+                    type="text"
+                    value={instagram}
+                    onChange={(e) => setInstagram(e.target.value)}
+                    placeholder="https://instagram.com/studio"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 font-mono text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
+                    Studio Website
+                  </label>
+                  <input
+                    type="url"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                    placeholder="https://studio.com"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 font-mono text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
+                    YouTube Channel
+                  </label>
+                  <input
+                    type="url"
+                    value={youtube}
+                    onChange={(e) => setYoutube(e.target.value)}
+                    placeholder="https://youtube.com/@studio"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 font-mono text-xs"
+                  />
+                </div>
               </div>
             </div>
 

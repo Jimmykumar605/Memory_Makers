@@ -24,6 +24,8 @@ function LoginContent() {
   const [fullName, setFullName] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [phone, setPhone] = useState("");
+  const [gender, setGender] = useState<"male" | "female" | "other">("male");
+  const [experienceYears, setExperienceYears] = useState<number>(3);
   const [state, setState] = useState("Punjab");
   const [city, setCity] = useState("Amritsar");
   const [startingPrice, setStartingPrice] = useState(55000);
@@ -71,6 +73,8 @@ function LoginContent() {
           password,
           role,
           phone: phone.trim(),
+          gender: role === "photographer" ? gender : undefined,
+          experienceYears: role === "photographer" ? Number(experienceYears) : undefined,
           state,
           city,
           businessName: role === "photographer" ? businessName : undefined,
@@ -419,6 +423,40 @@ function LoginContent() {
                               onChange={(e) => setCity(e.target.value)}
                               placeholder="e.g. Ludhiana"
                               className="w-full px-3 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Gender and Experience */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
+                              Photographer Gender *
+                            </label>
+                            <select
+                              value={gender}
+                              onChange={(e) => setGender(e.target.value as any)}
+                              className="w-full px-3 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white focus:outline-none focus:border-emerald-400 font-mono cursor-pointer"
+                            >
+                              <option value="male">Male</option>
+                              <option value="female">Female</option>
+                              <option value="other">Other</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
+                              Experience (Years) *
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              max="50"
+                              required
+                              value={experienceYears}
+                              onChange={(e) => setExperienceYears(Number(e.target.value))}
+                              placeholder="e.g. 5"
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white focus:outline-none focus:border-emerald-400 font-mono"
                             />
                           </div>
                         </div>

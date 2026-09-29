@@ -19,6 +19,7 @@ import {
   Sparkles,
   ArrowLeft,
   AlertTriangle,
+  Phone,
 } from "lucide-react";
 import { getPhotographerBySlug, getSeedPhotographerBySlug } from "@/lib/photographerStore";
 import { fetchPhotographerBySlugFromSupabase } from "@/lib/supabase/service";
@@ -188,6 +189,16 @@ export default function PhotographerProfilePage() {
                     <MapPin className="w-3.5 h-3.5 text-emerald-400" />
                     {photographer.city}, {photographer.state}, {photographer.country}
                   </span>
+                  {photographer.phone && (
+                    <a
+                      href={`tel:${photographer.phone.replace(/\s+/g, "")}`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/10 hover:bg-emerald-400/20 border border-emerald-400/30 text-emerald-300 font-mono text-xs font-semibold transition-all hover:scale-105"
+                      title="Direct Studio Mobile / WhatsApp"
+                    >
+                      <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>{photographer.phone}</span>
+                    </a>
+                  )}
                   {photographer.willingToTravel && (
                     <span className="flex items-center gap-1 text-emerald-300/90">
                       <Plane className="w-3.5 h-3.5" />
@@ -240,6 +251,18 @@ export default function PhotographerProfilePage() {
                     </span>
                   )}
                 </button>
+                {photographer.phone && (
+                  <a
+                    href={`https://wa.me/${photographer.phone.replace(/[^0-9]/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 hover:text-emerald-200 transition-colors flex items-center justify-center shrink-0"
+                    title="Direct WhatsApp with Artist"
+                    aria-label="Direct WhatsApp with Artist"
+                  >
+                    <Phone className="w-4 h-4 text-emerald-400" />
+                  </a>
+                )}
                 <button
                   onClick={() => setIsBookingOpen(true)}
                   className="flex-1 sm:flex-none px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-black font-semibold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02]"
@@ -262,12 +285,44 @@ export default function PhotographerProfilePage() {
             </div>
           </div>
 
-          {/* Bio statement */}
-          <div className="mt-6 pt-6 border-t border-white/10">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-emerald-400 mb-2 font-semibold">
-              Artistic Philosophy
-            </h3>
-            <p className="text-sm text-zinc-300 leading-relaxed font-light">{photographer.bio}</p>
+          {/* Bio statement & Direct Studio Contact */}
+          <div className="mt-6 pt-6 border-t border-white/10 flex flex-col md:flex-row md:items-start justify-between gap-6">
+            <div className="flex-1">
+              <h3 className="text-xs font-mono uppercase tracking-widest text-emerald-400 mb-2 font-semibold">
+                Artistic Philosophy
+              </h3>
+              <p className="text-sm text-zinc-300 leading-relaxed font-light">{photographer.bio}</p>
+            </div>
+            {photographer.phone && (
+              <div className="md:border-l md:border-white/10 md:pl-6 shrink-0 space-y-2">
+                <h4 className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-semibold flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Direct Mobile / Contact</span>
+                </h4>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <a
+                    href={`tel:${photographer.phone.replace(/\s+/g, "")}`}
+                    className="text-sm font-mono font-bold text-white hover:text-emerald-300 transition-colors"
+                  >
+                    {photographer.phone}
+                  </a>
+                  <a
+                    href={`https://wa.me/${photographer.phone.replace(/[^0-9]/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[11px] font-mono inline-flex items-center gap-1 transition-colors"
+                  >
+                    <span>WhatsApp</span>
+                  </a>
+                  <a
+                    href={`tel:${photographer.phone.replace(/\s+/g, "")}`}
+                    className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 text-[11px] font-mono inline-flex items-center gap-1 transition-colors"
+                  >
+                    <span>Call</span>
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

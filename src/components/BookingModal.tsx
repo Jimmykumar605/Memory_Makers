@@ -134,6 +134,9 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
                 <h3 className="text-lg font-bold text-white">{photographer.businessName}</h3>
                 <p className="text-xs text-zinc-400">
                   Based in {photographer.city}, {photographer.state} • Packages from ₹{photographer.startingPrice.toLocaleString("en-IN")}
+                  {photographer.phone && (
+                    <span className="text-emerald-300 font-mono"> • Studio: {photographer.phone}</span>
+                  )}
                 </p>
               </div>
             </div>

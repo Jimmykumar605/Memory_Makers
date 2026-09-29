@@ -11,6 +11,7 @@ interface ProfileRow {
   slug: string;
   email?: string;
   phone?: string;
+  gender?: string;
   applied_date?: string;
   avatar_url: string;
   cover_image_url: string;
@@ -82,6 +83,7 @@ function mapRowToPhotographer(row: ProfileRow): Photographer {
     slug: row.slug,
     email: row.email,
     phone: row.phone,
+    gender: row.gender || "male",
     status: row.status,
     appliedDate: row.applied_date,
     avatarUrl: row.avatar_url,
@@ -324,42 +326,61 @@ export async function registerPhotographerInSupabase(p: Partial<Photographer>): 
   if (!isSupabaseConfigured()) return null;
   try {
     const newId = p.id || "photo-" + Date.now();
-    const { data, error } = await supabase
+    const insertPayload: Record<string, any> = {
+      id: newId,
+      name: p.name,
+      business_name: p.businessName,
+      slug: p.slug,
+      email: p.email,
+      phone: p.phone,
+      gender: p.gender || "male",
+      status: p.status || "approved",
+      applied_date: p.appliedDate || "Just added",
+      avatar_url: p.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+      cover_image_url: p.coverImageUrl || "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80",
+      tagline: p.tagline || "",
+      bio: p.bio || "",
+      city: p.city || "New Delhi",
+      state: p.state || "Delhi NCR",
+      country: p.country || "India",
+      willing_to_travel: p.willingToTravel ?? true,
+      rating: p.rating ?? 0.0,
+      reviews_count: p.reviewsCount || 0,
+      experience_years: p.experienceYears || 3,
+      starting_price: p.startingPrice || 50000,
+      currency: p.currency || "INR",
+      featured: p.featured ?? false,
+      verified: p.verified ?? false,
+      specialties: p.specialties || ["Wedding"],
+      gear_list: p.gearList || [],
+      social_links: p.socialLinks || {},
+    };
+
+    let { data, error } = await supabase
       .from("profiles")
-      .insert({
-        id: newId,
-        name: p.name,
-        business_name: p.businessName,
-        slug: p.slug,
-        email: p.email,
-        phone: p.phone,
-        status: p.status || "approved",
-        applied_date: p.appliedDate || "Just added",
-        avatar_url: p.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
-        cover_image_url: p.coverImageUrl || "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80",
-        tagline: p.tagline || "",
-        bio: p.bio || "",
-        city: p.city || "New Delhi",
-        state: p.state || "Delhi NCR",
-        country: p.country || "India",
-        willing_to_travel: p.willingToTravel ?? true,
-        rating: p.rating ?? 0.0,
-        reviews_count: p.reviewsCount || 0,
-        experience_years: p.experienceYears || 2,
-        starting_price: p.startingPrice || 50000,
-        currency: p.currency || "INR",
-        featured: p.featured ?? false,
-        verified: p.verified ?? false,
-        specialties: p.specialties || ["Wedding"],
-        gear_list: p.gearList || [],
-        social_links: p.socialLinks || {},
-      })
+      .insert(insertPayload)
       .select()
       .single();
 
-    if (error || !data) return null;
+    // If column 'gender' does not exist yet in PostgreSQL table, retry without it
+    if (error && error.code === "42703" && "gender" in insertPayload) {
+      delete insertPayload.gender;
+      const retry = await supabase
+        .from("profiles")
+        .insert(insertPayload)
+        .select()
+        .single();
+      data = retry.data;
+      error = retry.error;
+    }
+
+    if (error || !data) {
+      console.warn("registerPhotographerInSupabase warning:", error?.message);
+      return null;
+    }
     return mapRowToPhotographer(data as ProfileRow);
-  } catch {
+  } catch (err) {
+    console.warn("registerPhotographerInSupabase exception:", err);
     return null;
   }
 }
@@ -374,6 +395,10 @@ export async function updatePhotographerStudioInSupabase(
     const profileUpdates: Record<string, unknown> = {};
     if (updates.name !== undefined) profileUpdates.name = updates.name;
     if (updates.businessName !== undefined) profileUpdates.business_name = updates.businessName;
+    if (updates.email !== undefined) profileUpdates.email = updates.email;
+    if (updates.phone !== undefined) profileUpdates.phone = updates.phone;
+    if (updates.gender !== undefined) profileUpdates.gender = updates.gender;
+    if (updates.experienceYears !== undefined) profileUpdates.experience_years = updates.experienceYears;
     if (updates.tagline !== undefined) profileUpdates.tagline = updates.tagline;
     if (updates.bio !== undefined) profileUpdates.bio = updates.bio;
     if (updates.city !== undefined) profileUpdates.city = updates.city;
@@ -384,11 +409,22 @@ export async function updatePhotographerStudioInSupabase(
     if (updates.avatarUrl !== undefined) profileUpdates.avatar_url = updates.avatarUrl;
     if (updates.coverImageUrl !== undefined) profileUpdates.cover_image_url = updates.coverImageUrl;
     if (updates.gearList !== undefined) profileUpdates.gear_list = updates.gearList;
+    if (updates.socialLinks !== undefined) profileUpdates.social_links = updates.socialLinks;
 
     if (Object.keys(profileUpdates).length > 0) {
       const { error } = await supabase.from("profiles").update(profileUpdates).eq("id", id);
       if (error) {
-        console.warn("Failed to update profile in Supabase:", error.message);
+        // If gender column does not exist yet (error code 42703), retry without gender
+        if (error.code === "42703" && "gender" in profileUpdates) {
+          const fallbackUpdates = { ...profileUpdates };
+          delete fallbackUpdates.gender;
+          const retry = await supabase.from("profiles").update(fallbackUpdates).eq("id", id);
+          if (retry.error) {
+            console.warn("Failed to update profile in Supabase on retry:", retry.error.message);
+          }
+        } else {
+          console.warn("Failed to update profile in Supabase:", error.message);
+        }
       }
     }
 
@@ -451,6 +487,7 @@ interface UserRow {
   name: string;
   email: string;
   phone?: string;
+  gender?: string;
   role: "admin" | "photographer" | "client";
   status: "active" | "suspended";
   city: string;
@@ -467,6 +504,7 @@ function mapRowToUser(row: UserRow): UserAccount {
     name: row.name,
     email: row.email,
     phone: row.phone,
+    gender: row.gender || "other",
     role: row.role,
     status: row.status,
     city: row.city,
@@ -642,6 +680,7 @@ export async function createUserInSupabase(user: Partial<UserAccount>): Promise<
       name: user.name || "New Member",
       email,
       phone: user.phone || null,
+      gender: user.gender || "other",
       role: user.role || "client",
       status: user.status || "active",
       city: user.city || "New Delhi",
@@ -655,25 +694,29 @@ export async function createUserInSupabase(user: Partial<UserAccount>): Promise<
       baseRow.password_hash = user.passwordHash;
     }
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("users")
       .upsert(baseRow, { onConflict: "email" })
       .select()
       .single();
 
     if (error) {
-      // If column password_hash does not exist yet, retry without it
-      if (error.code === "42703" && baseRow.password_hash) {
-        delete baseRow.password_hash;
+      // If column password_hash or gender does not exist yet (error 42703), retry without them
+      if (error.code === "42703") {
+        if ("gender" in baseRow) delete baseRow.gender;
+        if ("password_hash" in baseRow) delete baseRow.password_hash;
         const retry = await supabase
           .from("users")
           .upsert(baseRow, { onConflict: "email" })
           .select()
           .single();
-        if (retry.data) return mapRowToUser(retry.data as UserRow);
+        data = retry.data;
+        error = retry.error;
       }
-      console.warn("createUserInSupabase warning:", error.message);
-      return null;
+      if (error) {
+        console.warn("createUserInSupabase warning:", error.message);
+        return null;
+      }
     }
 
     if (!data) return null;

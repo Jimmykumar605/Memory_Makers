@@ -113,6 +113,8 @@ export default function AdminPortalPage() {
   const [newArtistCity, setNewArtistCity] = useState("Amritsar");
   const [newStartingPrice, setNewStartingPrice] = useState(65000);
   const [newArtistTagline, setNewArtistTagline] = useState("");
+  const [newArtistGender, setNewArtistGender] = useState<"male" | "female" | "other">("male");
+  const [newArtistExperience, setNewArtistExperience] = useState<number>(3);
 
   // Check authentication on mount & load dynamic Supabase DB records
   useEffect(() => {
@@ -395,6 +397,8 @@ export default function AdminPortalPage() {
       city: newArtistCity,
       startingPrice: Number(newStartingPrice) || 50000,
       tagline: newArtistTagline || `Fine Art Wedding Storyteller in ${newArtistCity}, ${newArtistState}`,
+      gender: newArtistGender,
+      experienceYears: Number(newArtistExperience) || 3,
     });
 
     // Auto-approve since admin created it
@@ -409,6 +413,8 @@ export default function AdminPortalPage() {
     setNewArtistEmail("");
     setNewArtistPhone("");
     setNewArtistTagline("");
+    setNewArtistGender("male");
+    setNewArtistExperience(3);
     setActiveTab("all");
   };
 
@@ -1041,8 +1047,16 @@ export default function AdminPortalPage() {
                       </div>
                     )}
 
-                    {/* Contact details */}
-                    <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-zinc-400 pt-2 border-t border-white/5">
+                    {/* Contact details & stats */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono text-zinc-400 pt-2 border-t border-white/5">
+                      <div className="truncate">
+                        <span className="text-zinc-500">Gender:</span>{" "}
+                        <span className="capitalize text-emerald-400 font-semibold">{applicant.gender || "N/A"}</span>
+                      </div>
+                      <div className="truncate">
+                        <span className="text-zinc-500">Exp:</span>{" "}
+                        <span className="text-zinc-200">{applicant.experienceYears ? `${applicant.experienceYears} Yrs` : "N/A"}</span>
+                      </div>
                       <div className="truncate">
                         <span className="text-zinc-500">Email:</span> {applicant.email || "N/A"}
                       </div>
@@ -1629,6 +1643,51 @@ export default function AdminPortalPage() {
 
                 <div>
                   <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
+                    Phone / WhatsApp Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={newArtistPhone}
+                    onChange={(e) => setNewArtistPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
+                    Gender *
+                  </label>
+                  <select
+                    value={newArtistGender}
+                    onChange={(e) => setNewArtistGender(e.target.value as "male" | "female" | "other")}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white focus:outline-none focus:border-emerald-400 font-mono"
+                  >
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
+                    Experience (Years) *
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={60}
+                    required
+                    value={newArtistExperience}
+                    onChange={(e) => setNewArtistExperience(Number(e.target.value))}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white focus:outline-none focus:border-emerald-400 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
                     Starting Rate (₹ INR) *
                   </label>
                   <input
@@ -1776,9 +1835,17 @@ export default function AdminPortalPage() {
 
             {/* Applicant Bio & Details */}
             <div className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-black/40 border border-white/5 font-mono">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 rounded-2xl bg-black/40 border border-white/5 font-mono">
                 <div>
                   <span className="text-zinc-500">Applicant:</span> {inspectApplicant.name}
+                </div>
+                <div>
+                  <span className="text-zinc-500">Gender:</span>{" "}
+                  <span className="capitalize text-emerald-400 font-semibold">{inspectApplicant.gender || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="text-zinc-500">Experience:</span>{" "}
+                  <span className="text-zinc-200">{inspectApplicant.experienceYears ? `${inspectApplicant.experienceYears} Years` : "N/A"}</span>
                 </div>
                 <div>
                   <span className="text-zinc-500">Location:</span> {inspectApplicant.city},{" "}
@@ -1788,6 +1855,9 @@ export default function AdminPortalPage() {
                   <span className="text-zinc-500">Email:</span> {inspectApplicant.email || "N/A"}
                 </div>
                 <div>
+                  <span className="text-zinc-500">Phone:</span> {inspectApplicant.phone || "N/A"}
+                </div>
+                <div className="col-span-2 sm:col-span-3">
                   <span className="text-zinc-500">Starting Price:</span> ₹
                   {inspectApplicant.startingPrice.toLocaleString("en-IN")}
                 </div>

@@ -20,6 +20,8 @@ interface SignupPayload {
   password?: string;
   role: "photographer" | "client";
   phone?: string;
+  gender?: "male" | "female" | "other" | string;
+  experienceYears?: number;
   city?: string;
   state?: string;
   businessName?: string;

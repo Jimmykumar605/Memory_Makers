@@ -268,6 +268,7 @@ export function registerNewPhotographer(applicant: Partial<Photographer>): Photo
     slug,
     email: applicant.email || "creator@example.com",
     phone: applicant.phone || "+91 98000 00000",
+    gender: applicant.gender || "male",
     status: "pending",
     appliedDate: "Just now (" + new Date().toLocaleDateString("en-IN") + ")",
     avatarUrl:

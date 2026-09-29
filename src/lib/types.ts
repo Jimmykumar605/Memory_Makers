@@ -50,6 +50,7 @@ export interface Photographer {
   slug: string;
   email?: string;
   phone?: string;
+  gender?: "male" | "female" | "other" | string;
   status?: PhotographerStatus;
   appliedDate?: string;
   avatarUrl: string;
@@ -101,6 +102,7 @@ export interface UserAccount {
   name: string;
   email: string;
   phone?: string;
+  gender?: "male" | "female" | "other" | string;
   role: UserRole;
   city: string;
   state: string;
