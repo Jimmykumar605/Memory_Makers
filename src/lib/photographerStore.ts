@@ -313,10 +313,11 @@ export function registerNewPhotographer(applicant: Partial<Photographer>): Photo
   return newPhotographer;
 }
 
-// Update studio profile data
+// Update studio profile data in local store (and optionally Supabase)
 export function updatePhotographerStudio(
   id: string,
-  updates: Partial<Photographer>
+  updates: Partial<Photographer>,
+  syncSupabase: boolean = false
 ): Photographer | null {
   const all = getStoredPhotographers();
   let updatedItem: Photographer | null = null;
@@ -329,7 +330,7 @@ export function updatePhotographerStudio(
   });
   savePhotographers(updated);
 
-  if (isSupabaseConfigured()) {
+  if (syncSupabase && isSupabaseConfigured()) {
     updatePhotographerStudioInSupabase(id, updates).catch(console.warn);
   }
 

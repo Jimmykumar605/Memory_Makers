@@ -425,7 +425,12 @@ export default function PhotographerProfilePage() {
         {/* ===================================================================== */}
         {activeTab === "packages" && (
           <div className="py-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {photographer.packages.map((pkg) => (
+            {photographer.packages
+              .filter((pkg, idx, self) => {
+                const key = `${(pkg.name || "").toLowerCase().trim()}_${pkg.price}`;
+                return self.findIndex((p) => p.id === pkg.id || `${(p.name || "").toLowerCase().trim()}_${p.price}` === key) === idx;
+              })
+              .map((pkg) => (
               <div
                 key={pkg.id}
                 className={`p-6 sm:p-8 rounded-2xl glass-panel border flex flex-col justify-between relative ${

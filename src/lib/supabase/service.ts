@@ -104,15 +104,29 @@ function mapRowToPhotographer(row: ProfileRow): Photographer {
     specialties: row.specialties || ["Wedding"],
     gearList: row.gear_list || [],
     socialLinks: row.social_links || {},
-    packages: (row.packages || []).map((pkg) => ({
-      id: pkg.id,
-      name: pkg.name,
-      price: Number(pkg.price),
-      duration: pkg.duration,
-      description: pkg.description,
-      deliverables: pkg.deliverables || [],
-      isPopular: Boolean(pkg.is_popular),
-    })),
+    packages: (() => {
+      const seenIds = new Set<string>();
+      const seenNames = new Set<string>();
+      return (row.packages || [])
+        .filter((pkg) => {
+          if (!pkg) return false;
+          const nameKey = `${(pkg.name || "").toLowerCase().trim()}_${pkg.price}`;
+          if (pkg.id && seenIds.has(pkg.id)) return false;
+          if (seenNames.has(nameKey)) return false;
+          if (pkg.id) seenIds.add(pkg.id);
+          seenNames.add(nameKey);
+          return true;
+        })
+        .map((pkg) => ({
+          id: pkg.id,
+          name: pkg.name,
+          price: Number(pkg.price),
+          duration: pkg.duration,
+          description: pkg.description,
+          deliverables: pkg.deliverables || [],
+          isPopular: Boolean(pkg.is_popular),
+        }));
+    })(),
     portfolio: (row.portfolios || []).map((item) => ({
       id: item.id,
       title: item.title,
@@ -453,19 +467,30 @@ export async function updatePhotographerStudioInSupabase(
     if (updates.packages !== undefined) {
       await supabase.from("packages").delete().eq("photographer_id", id);
       if (updates.packages.length > 0) {
-        const pkgRows = updates.packages.map((pkg, idx) => ({
-          id: pkg.id && !pkg.id.startsWith("pkg-") ? pkg.id : `pkg-${Date.now()}-${idx}`,
-          photographer_id: id,
-          name: pkg.name,
-          price: pkg.price,
-          duration: pkg.duration,
-          description: pkg.description || "Custom tailored wedding collection",
-          deliverables: pkg.deliverables || [],
-          is_popular: pkg.isPopular ?? false,
-        }));
-        const { error: pkgError } = await supabase.from("packages").insert(pkgRows);
-        if (pkgError) {
-          console.warn("Failed to sync packages in Supabase:", pkgError.message);
+        // Deduplicate before inserting to ensure no duplicate rows
+        const seenPkgKeys = new Set<string>();
+        const pkgRows = updates.packages
+          .filter((pkg) => {
+            const key = `${(pkg.name || "").toLowerCase().trim()}_${pkg.price}`;
+            if (seenPkgKeys.has(key)) return false;
+            seenPkgKeys.add(key);
+            return true;
+          })
+          .map((pkg, idx) => ({
+            id: pkg.id && !pkg.id.startsWith("pkg-new-") ? pkg.id : `pkg-${Date.now()}-${idx}`,
+            photographer_id: id,
+            name: pkg.name,
+            price: pkg.price,
+            duration: pkg.duration,
+            description: pkg.description || "Custom tailored wedding collection",
+            deliverables: pkg.deliverables || [],
+            is_popular: pkg.isPopular ?? false,
+          }));
+        if (pkgRows.length > 0) {
+          const { error: pkgError } = await supabase.from("packages").insert(pkgRows);
+          if (pkgError) {
+            console.warn("Failed to sync packages in Supabase:", pkgError.message);
+          }
         }
       }
     }

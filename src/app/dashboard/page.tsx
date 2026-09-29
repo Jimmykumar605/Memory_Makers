@@ -106,6 +106,7 @@ export default function PhotographerDashboardPage() {
   const [newPkgPrice, setNewPkgPrice] = useState("");
   const [newPkgDuration, setNewPkgDuration] = useState("");
   const [newPkgDeliverables, setNewPkgDeliverables] = useState("");
+  const [isSubmittingPackage, setIsSubmittingPackage] = useState(false);
 
   // Inquiries State in INR (₹)
   const [inquiries, setInquiries] = useState<BookingInquiry[]>([]);
@@ -140,7 +141,18 @@ export default function PhotographerDashboardPage() {
     setAvatarUrl(p.avatarUrl || "");
     setCoverImageUrl(p.coverImageUrl || "");
     setPortfolio(p.portfolio || []);
-    setPackages(p.packages || []);
+    // Deduplicate packages by id and name when loading profile
+    const seenPkgs = new Set<string>();
+    const uniquePkgs = (p.packages || []).filter((pkg) => {
+      if (!pkg) return false;
+      const key = `${(pkg.name || "").toLowerCase().trim()}_${pkg.price}`;
+      if (pkg.id && seenPkgs.has(pkg.id)) return false;
+      if (seenPkgs.has(key)) return false;
+      if (pkg.id) seenPkgs.add(pkg.id);
+      seenPkgs.add(key);
+      return true;
+    });
+    setPackages(uniquePkgs);
     setGearList(p.gearList || []);
     setStudioRating(p.rating ?? 0.0);
     setStudioReviewsCount(p.reviewsCount || 0);
@@ -354,30 +366,45 @@ export default function PhotographerDashboardPage() {
   // Add Package
   const handleAddPackage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPkgName || !newPkgPrice) return;
+    if (isSubmittingPackage || !newPkgName.trim() || !newPkgPrice) return;
 
-    const newPkg: Package = {
-      id: `pkg-${Date.now()}`,
-      name: newPkgName,
-      price: parseFloat(newPkgPrice),
-      duration: newPkgDuration || "Full Day",
-      description: "Custom tailored wedding collection",
-      deliverables: newPkgDeliverables
-        ? newPkgDeliverables.split(",").map((s) => s.trim())
-        : ["Master color-graded images", "Online cloud gallery", "Full HD Highlights"],
-    };
+    // Guard against duplicate package names in current studio packages
+    const trimmedName = newPkgName.trim();
+    const isDuplicate = packages.some(
+      (pkg) => pkg.name.toLowerCase().trim() === trimmedName.toLowerCase()
+    );
+    if (isDuplicate) {
+      triggerSaveToast("A package with this title already exists. Please choose a unique name.");
+      return;
+    }
 
-    const updatedPackages = [...packages, newPkg];
-    setPackages(updatedPackages);
-    setNewPkgName("");
-    setNewPkgPrice("");
-    setNewPkgDuration("");
-    setNewPkgDeliverables("");
-    triggerSaveToast("New package published!");
+    setIsSubmittingPackage(true);
+    try {
+      const newPkg: Package = {
+        id: `pkg-${Date.now()}`,
+        name: trimmedName,
+        price: parseFloat(newPkgPrice),
+        duration: newPkgDuration.trim() || "Full Day",
+        description: "Custom tailored wedding collection",
+        deliverables: newPkgDeliverables
+          ? newPkgDeliverables.split(",").map((s) => s.trim()).filter(Boolean)
+          : ["Master color-graded images", "Online cloud gallery", "Full HD Highlights"],
+      };
 
-    if (activePhotographerId) {
-      updatePhotographerStudio(activePhotographerId, { packages: updatedPackages });
-      await updatePhotographerStudioInSupabase(activePhotographerId, { packages: updatedPackages });
+      const updatedPackages = [...packages, newPkg];
+      setPackages(updatedPackages);
+      setNewPkgName("");
+      setNewPkgPrice("");
+      setNewPkgDuration("");
+      setNewPkgDeliverables("");
+      triggerSaveToast("New package published!");
+
+      if (activePhotographerId) {
+        updatePhotographerStudio(activePhotographerId, { packages: updatedPackages }, false);
+        await updatePhotographerStudioInSupabase(activePhotographerId, { packages: updatedPackages });
+      }
+    } finally {
+      setIsSubmittingPackage(false);
     }
   };
 
@@ -388,7 +415,7 @@ export default function PhotographerDashboardPage() {
     triggerSaveToast("Package removed.");
 
     if (activePhotographerId) {
-      updatePhotographerStudio(activePhotographerId, { packages: updatedPackages });
+      updatePhotographerStudio(activePhotographerId, { packages: updatedPackages }, false);
       await updatePhotographerStudioInSupabase(activePhotographerId, { packages: updatedPackages });
     }
   };
@@ -1409,10 +1436,22 @@ export default function PhotographerDashboardPage() {
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 px-4 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-black font-semibold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 hover:scale-105 transition-all cursor-pointer"
+                  disabled={isSubmittingPackage}
+                  className={`w-full py-2.5 px-4 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-black font-semibold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all ${
+                    isSubmittingPackage ? "opacity-60 cursor-not-allowed" : "hover:scale-105 cursor-pointer"
+                  }`}
                 >
-                  <Plus className="w-4 h-4" />
-                  <span>Publish Package</span>
+                  {isSubmittingPackage ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Publishing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      <span>Publish Package</span>
+                    </>
+                  )}
                 </button>
               </form>
             </div>
