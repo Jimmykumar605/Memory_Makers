@@ -20,6 +20,8 @@ import {
   ArrowLeft,
   AlertTriangle,
   Phone,
+  Globe,
+  ExternalLink,
 } from "lucide-react";
 import { getPhotographerBySlug, getSeedPhotographerBySlug } from "@/lib/photographerStore";
 import { fetchPhotographerBySlugFromSupabase } from "@/lib/supabase/service";
@@ -27,6 +29,45 @@ import { PortfolioItem, Package, Photographer } from "@/lib/types";
 import BookingModal from "@/components/BookingModal";
 import PhotoLightbox from "@/components/PhotoLightbox";
 import ReviewModal from "@/components/ReviewModal";
+
+function formatInstagramUrl(val?: string): string {
+  if (!val) return "";
+  const clean = val.trim();
+  if (clean.startsWith("http://") || clean.startsWith("https://")) return clean;
+  const handle = clean.replace(/^@/, "");
+  return `https://instagram.com/${handle}`;
+}
+
+function formatWebsiteUrl(val?: string): string {
+  if (!val) return "";
+  const clean = val.trim();
+  if (clean.startsWith("http://") || clean.startsWith("https://")) return clean;
+  return `https://${clean}`;
+}
+
+function formatYouTubeUrl(val?: string): string {
+  if (!val) return "";
+  const clean = val.trim();
+  if (clean.startsWith("http://") || clean.startsWith("https://")) return clean;
+  if (clean.startsWith("@")) return `https://youtube.com/${clean}`;
+  return `https://${clean}`;
+}
+
+function InstagramIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+    </svg>
+  );
+}
+
+function YouTubeIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    </svg>
+  );
+}
 
 export default function PhotographerProfilePage() {
   const params = useParams();
@@ -230,11 +271,10 @@ export default function PhotographerProfilePage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsLiked(!isLiked)}
-                  className={`p-3 rounded-xl border transition-all ${
-                    isLiked
+                  className={`p-3 rounded-xl border transition-all ${isLiked
                       ? "bg-rose-500/20 border-rose-500/40 text-rose-400"
                       : "bg-white/[0.04] border-white/10 text-zinc-300 hover:text-white"
-                  }`}
+                    }`}
                   aria-label="Wishlist"
                 >
                   <Heart className={`w-4 h-4 ${isLiked ? "fill-rose-500" : ""}`} />
@@ -263,6 +303,42 @@ export default function PhotographerProfilePage() {
                     <Phone className="w-4 h-4 text-emerald-400" />
                   </a>
                 )}
+                {/* {photographer.socialLinks?.instagram && (
+                  <a
+                    href={formatInstagramUrl(photographer.socialLinks.instagram)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/30 text-pink-400 hover:text-pink-300 transition-all hover:scale-105 flex items-center justify-center shrink-0"
+                    title="Official Instagram Profile"
+                    aria-label="Official Instagram Profile"
+                  >
+                    <InstagramIcon className="w-4 h-4" />
+                  </a>
+                )}
+                {photographer.socialLinks?.youtube && (
+                  <a
+                    href={formatYouTubeUrl(photographer.socialLinks.youtube)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 hover:text-red-300 transition-all hover:scale-105 flex items-center justify-center shrink-0"
+                    title="YouTube Channel / Portfolio"
+                    aria-label="YouTube Channel / Portfolio"
+                  >
+                    <YouTubeIcon className="w-4 h-4" />
+                  </a>
+                )}
+                {photographer.socialLinks?.website && (
+                  <a
+                    href={formatWebsiteUrl(photographer.socialLinks.website)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:text-emerald-300 transition-all hover:scale-105 flex items-center justify-center shrink-0"
+                    title="Official Studio Website"
+                    aria-label="Official Studio Website"
+                  >
+                    <Globe className="w-4 h-4" />
+                  </a>
+                )} */}
                 <button
                   onClick={() => setIsBookingOpen(true)}
                   className="flex-1 sm:flex-none px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-black font-semibold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02]"
@@ -285,44 +361,97 @@ export default function PhotographerProfilePage() {
             </div>
           </div>
 
-          {/* Bio statement & Direct Studio Contact */}
-          <div className="mt-6 pt-6 border-t border-white/10 flex flex-col md:flex-row md:items-start justify-between gap-6">
+          {/* Bio statement & Direct Studio Contact & Social Portfolios */}
+          <div className="mt-6 pt-6 border-t border-white/10 flex flex-col lg:flex-row lg:items-start justify-between gap-6">
             <div className="flex-1">
               <h3 className="text-xs font-mono uppercase tracking-widest text-emerald-400 mb-2 font-semibold">
                 Artistic Philosophy
               </h3>
               <p className="text-sm text-zinc-300 leading-relaxed font-light">{photographer.bio}</p>
             </div>
-            {photographer.phone && (
-              <div className="md:border-l md:border-white/10 md:pl-6 shrink-0 space-y-2">
-                <h4 className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-semibold flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Direct Mobile / Contact</span>
-                </h4>
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <a
-                    href={`tel:${photographer.phone.replace(/\s+/g, "")}`}
-                    className="text-sm font-mono font-bold text-white hover:text-emerald-300 transition-colors"
-                  >
-                    {photographer.phone}
-                  </a>
-                  <a
-                    href={`https://wa.me/${photographer.phone.replace(/[^0-9]/g, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[11px] font-mono inline-flex items-center gap-1 transition-colors"
-                  >
-                    <span>WhatsApp</span>
-                  </a>
-                  <a
-                    href={`tel:${photographer.phone.replace(/\s+/g, "")}`}
-                    className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 text-[11px] font-mono inline-flex items-center gap-1 transition-colors"
-                  >
-                    <span>Call</span>
-                  </a>
+
+            <div className="flex flex-wrap sm:flex-nowrap items-start gap-6 shrink-0">
+              {/* Direct Studio Contact */}
+              {photographer.phone && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-semibold flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Direct Mobile</span>
+                  </h4>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <a
+                      href={`tel:${photographer.phone.replace(/\s+/g, "")}`}
+                      className="text-sm font-mono font-bold text-white hover:text-emerald-300 transition-colors"
+                    >
+                      {photographer.phone}
+                    </a>
+                    <a
+                      href={`https://wa.me/${photographer.phone.replace(/[^0-9]/g, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[11px] font-mono inline-flex items-center gap-1 transition-colors"
+                    >
+                      <span>WhatsApp</span>
+                    </a>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* Online Portfolios & Social Channels */}
+              {Boolean(
+                photographer.socialLinks?.instagram ||
+                photographer.socialLinks?.website ||
+                photographer.socialLinks?.youtube
+              ) && (
+                  <div className="space-y-2 sm:border-l sm:border-white/10 sm:pl-6">
+                    <h4 className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-semibold flex items-center gap-1.5">
+                      <Globe className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Official Portfolios</span>
+                    </h4>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {photographer.socialLinks?.instagram && (
+                        <a
+                          href={formatInstagramUrl(photographer.socialLinks.instagram)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1.5 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/30 text-pink-300 hover:text-pink-200 text-xs font-medium inline-flex items-center gap-1.5 transition-all hover:scale-105 shadow-sm"
+                          title="Open Instagram Profile"
+                        >
+                          <InstagramIcon className="w-3.5 h-3.5 text-pink-400" />
+                          <span>Instagram</span>
+                          <ExternalLink className="w-3 h-3 opacity-60" />
+                        </a>
+                      )}
+                      {photographer.socialLinks?.youtube && (
+                        <a
+                          href={formatYouTubeUrl(photographer.socialLinks.youtube)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 hover:text-red-200 text-xs font-medium inline-flex items-center gap-1.5 transition-all hover:scale-105 shadow-sm"
+                          title="Watch YouTube Channel & Showreel"
+                        >
+                          <YouTubeIcon className="w-3.5 h-3.5 text-red-400" />
+                          <span>YouTube</span>
+                          <ExternalLink className="w-3 h-3 opacity-60" />
+                        </a>
+                      )}
+                      {photographer.socialLinks?.website && (
+                        <a
+                          href={formatWebsiteUrl(photographer.socialLinks.website)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 hover:text-emerald-200 text-xs font-medium inline-flex items-center gap-1.5 transition-all hover:scale-105 shadow-sm"
+                          title="Visit Official Website"
+                        >
+                          <Globe className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Website</span>
+                          <ExternalLink className="w-3 h-3 opacity-60" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+            </div>
           </div>
         </div>
 
@@ -337,11 +466,10 @@ export default function PhotographerProfilePage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`pb-4 px-3 text-sm font-medium transition-all relative whitespace-nowrap ${
-                activeTab === tab.id
+              className={`pb-4 px-3 text-sm font-medium transition-all relative whitespace-nowrap ${activeTab === tab.id
                   ? "text-emerald-400 font-semibold"
                   : "text-zinc-400 hover:text-zinc-200"
-              }`}
+                }`}
             >
               {tab.label}
               {activeTab === tab.id && (
@@ -364,11 +492,10 @@ export default function PhotographerProfilePage() {
                   <button
                     key={occ}
                     onClick={() => setPortfolioOccasion(occ)}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                      portfolioOccasion === occ
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${portfolioOccasion === occ
                         ? "bg-emerald-400 text-black font-semibold shadow-md shadow-emerald-400/20"
                         : "bg-white/[0.04] text-zinc-300 hover:text-white border border-white/10 hover:border-emerald-400/30"
-                    }`}
+                      }`}
                   >
                     {occ}
                   </button>
@@ -431,61 +558,59 @@ export default function PhotographerProfilePage() {
                 return self.findIndex((p) => p.id === pkg.id || `${(p.name || "").toLowerCase().trim()}_${p.price}` === key) === idx;
               })
               .map((pkg) => (
-              <div
-                key={pkg.id}
-                className={`p-6 sm:p-8 rounded-2xl glass-panel border flex flex-col justify-between relative ${
-                  pkg.isPopular
-                    ? "border-emerald-400/50 bg-emerald-500/[0.04] shadow-xl shadow-emerald-500/10"
-                    : "border-white/10"
-                }`}
-              >
-                {pkg.isPopular && (
-                  <span className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-gradient-to-r from-emerald-400 to-green-500 text-black font-semibold text-[10px] uppercase tracking-wider shadow-md shadow-emerald-500/20">
-                    Most Popular Choice
-                  </span>
-                )}
-
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-xl font-serif font-bold text-white">{pkg.name}</h3>
-                    <p className="text-xs font-mono text-emerald-400 mt-1">{pkg.duration}</p>
-                  </div>
-
-                  <div className="py-3 border-y border-white/10">
-                    <span className="text-3xl font-extrabold text-white">
-                      ₹{pkg.price.toLocaleString("en-IN")}
-                    </span>
-                    <span className="text-xs text-zinc-400 ml-1.5 font-mono">INR</span>
-                    <p className="text-xs text-zinc-400 mt-1 leading-relaxed">{pkg.description}</p>
-                  </div>
-
-                  <div className="space-y-2.5 pt-2">
-                    <span className="text-xs font-mono uppercase text-zinc-400 block">
-                      Deliverables Included:
-                    </span>
-                    {pkg.deliverables.map((item, idx) => (
-                      <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-300">
-                        <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                        <span>{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="pt-8">
-                  <button
-                    onClick={() => setIsBookingOpen(true)}
-                    className={`w-full py-3 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all ${
-                      pkg.isPopular
-                        ? "bg-emerald-400 hover:bg-emerald-300 text-black shadow-lg shadow-emerald-500/20 hover:scale-[1.02]"
-                        : "bg-white/[0.06] hover:bg-emerald-500/15 hover:border-emerald-400/40 text-white border border-white/15"
+                <div
+                  key={pkg.id}
+                  className={`p-6 sm:p-8 rounded-2xl glass-panel border flex flex-col justify-between relative ${pkg.isPopular
+                      ? "border-emerald-400/50 bg-emerald-500/[0.04] shadow-xl shadow-emerald-500/10"
+                      : "border-white/10"
                     }`}
-                  >
-                    Select & Reserve Dates
-                  </button>
+                >
+                  {pkg.isPopular && (
+                    <span className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-gradient-to-r from-emerald-400 to-green-500 text-black font-semibold text-[10px] uppercase tracking-wider shadow-md shadow-emerald-500/20">
+                      Most Popular Choice
+                    </span>
+                  )}
+
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-xl font-serif font-bold text-white">{pkg.name}</h3>
+                      <p className="text-xs font-mono text-emerald-400 mt-1">{pkg.duration}</p>
+                    </div>
+
+                    <div className="py-3 border-y border-white/10">
+                      <span className="text-3xl font-extrabold text-white">
+                        ₹{pkg.price.toLocaleString("en-IN")}
+                      </span>
+                      <span className="text-xs text-zinc-400 ml-1.5 font-mono">INR</span>
+                      <p className="text-xs text-zinc-400 mt-1 leading-relaxed">{pkg.description}</p>
+                    </div>
+
+                    <div className="space-y-2.5 pt-2">
+                      <span className="text-xs font-mono uppercase text-zinc-400 block">
+                        Deliverables Included:
+                      </span>
+                      {pkg.deliverables.map((item, idx) => (
+                        <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-300">
+                          <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                          <span>{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-8">
+                    <button
+                      onClick={() => setIsBookingOpen(true)}
+                      className={`w-full py-3 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all ${pkg.isPopular
+                          ? "bg-emerald-400 hover:bg-emerald-300 text-black shadow-lg shadow-emerald-500/20 hover:scale-[1.02]"
+                          : "bg-white/[0.06] hover:bg-emerald-500/15 hover:border-emerald-400/40 text-white border border-white/15"
+                        }`}
+                    >
+                      Select & Reserve Dates
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         )}
 
