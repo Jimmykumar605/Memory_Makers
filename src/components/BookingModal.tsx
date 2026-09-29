@@ -99,15 +99,18 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl glass-panel-green border border-emerald-400/30 p-6 sm:p-8 shadow-2xl text-white">
-        {/* Close Button */}
+      <div className="relative w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl glass-panel-green border border-emerald-400/30 shadow-2xl text-white overflow-hidden">
+        {/* Close Button: fixed at top-right with dark pill backdrop, never touching the scrollbar */}
         <button
           onClick={handleReset}
-          className="absolute top-5 right-5 p-2 rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+          className="absolute top-4 right-4 z-30 p-2.5 rounded-full bg-black/70 hover:bg-white/15 text-zinc-400 hover:text-white border border-white/10 transition-all cursor-pointer shadow-lg"
           aria-label="Close modal"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
+
+        {/* Scrollable Container with rounded-safe transparent scrollbar */}
+        <div className="overflow-y-auto p-6 sm:p-8 modal-scrollbar max-h-[90vh] w-full">
 
         {submitted ? (
           <div className="py-6 text-center space-y-5 animate-in zoom-in-95 duration-300">
@@ -360,6 +363,7 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
             </form>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

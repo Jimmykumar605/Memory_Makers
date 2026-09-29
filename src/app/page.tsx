@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import LazyImage from "@/components/LazyImage";
@@ -17,6 +17,8 @@ import {
   Users,
   Video,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   HelpCircle,
 } from "lucide-react";
 import HeroSearch from "@/components/HeroSearch";
@@ -79,6 +81,52 @@ export default function Home() {
       : photographersList.filter((p) =>
           p.specialties.some((s) => s.toLowerCase().includes(featuredOccasion.toLowerCase()))
         );
+
+  const filterScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    if (filterScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = filterScrollRef.current;
+      setCanScrollLeft(scrollLeft > 8);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 8);
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener("resize", checkScroll);
+    return () => window.removeEventListener("resize", checkScroll);
+  }, [photographersList]);
+
+  const scrollFilters = (direction: "left" | "right") => {
+    if (filterScrollRef.current) {
+      const scrollAmount = direction === "left" ? -280 : 280;
+      filterScrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+      setTimeout(checkScroll, 320);
+    }
+  };
+
+  const filterCategories = [
+    { label: "All", displayName: "All Specialties", icon: Sparkles },
+    { label: "Wedding", displayName: "Wedding", icon: Heart },
+    { label: "Pre-Wedding", displayName: "Pre-Wedding", icon: Camera },
+    { label: "Destination", displayName: "Destination", icon: Compass },
+    { label: "Traditional & Cultural", displayName: "Traditional & Cultural", icon: Star },
+    { label: "Engagement", displayName: "Engagement", icon: Sparkles },
+    { label: "Maternity & Baby", displayName: "Maternity & Baby", icon: Users },
+    { label: "Fashion & Editorial", displayName: "Fashion & Editorial", icon: Camera },
+    { label: "Drone & Cinematic", displayName: "Drone & Cinematic", icon: Video },
+    { label: "Corporate & Events", displayName: "Corporate & Events", icon: Calendar },
+  ];
+
+  const getCategoryCount = (catLabel: string) => {
+    if (catLabel === "All") return photographersList.length;
+    return photographersList.filter((p) =>
+      p.specialties.some((s) => s.toLowerCase().includes(catLabel.toLowerCase()))
+    ).length;
+  };
 
   const handleQuickInquire = (photographer: Photographer) => {
     setSelectedPhotographer(photographer);
@@ -240,47 +288,135 @@ export default function Home() {
       {/* FEATURED PHOTOGRAPHERS SPOTLIGHT */}
       {/* ========================================================================= */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06]">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+        {/* Header row: Title + Meta */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
-            <span className="text-xs font-mono uppercase tracking-widest text-emerald-400 block mb-1">
-              Hand-Selected Masters
-            </span>
-            <h2 className="text-2xl sm:text-4xl font-serif font-bold text-white">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/10 border border-emerald-400/25 text-emerald-400 text-xs font-mono uppercase tracking-wider mb-2 font-semibold">
+              <Sparkles className="w-3.5 h-3.5" /> Hand-Selected Masters
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-serif font-bold text-white tracking-tight">
               Featured Visual Artisans
             </h2>
-            <p className="text-sm text-zinc-400 mt-1">
+            <p className="text-sm text-zinc-400 mt-1 max-w-2xl">
               Top-rated creators renowned for exceptional craftsmanship in Punjab, Rajasthan, Haryana, Himachal & Delhi NCR.
             </p>
           </div>
 
-          {/* Category Filter Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
-            {["All", "Wedding", "Pre-Wedding", "Destination", "Traditional"].map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setFeaturedOccasion(filter)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-                  featuredOccasion === filter
-                    ? "bg-emerald-400 text-black font-semibold shadow-md shadow-emerald-400/25"
-                    : "bg-white/[0.04] text-zinc-300 hover:text-white border border-white/10 hover:border-emerald-400/30"
-                }`}
-              >
-                {filter === "All" ? "All Specialties" : filter}
-              </button>
-            ))}
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="text-xs font-mono text-zinc-400">
+              Showing <strong className="text-emerald-300 font-semibold">{filteredPhotographers.length}</strong> of {photographersList.length} artists
+            </span>
+            <Link
+              href="/photographers"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-500/40"
+            >
+              <span>Explore All</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
 
-        {/* Photographers Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredPhotographers.map((photographer) => (
-            <PhotographerCard
-              key={photographer.id}
-              photographer={photographer}
-              onQuickInquire={handleQuickInquire}
-            />
-          ))}
+        {/* Dedicated Modern Specialty Filter Bar (Arrows safely beside the track, never overlapping) */}
+        <div className="flex items-center gap-2.5 mb-10">
+          {/* Scroll Left Button */}
+          <button
+            onClick={() => scrollFilters("left")}
+            disabled={!canScrollLeft}
+            className={`shrink-0 w-9 h-9 rounded-xl bg-[#090e0b] border border-white/10 flex items-center justify-center shadow-md transition-all cursor-pointer ${
+              canScrollLeft
+                ? "text-zinc-200 hover:text-emerald-300 hover:border-emerald-400/50 hover:bg-[#0f1712] hover:scale-105 active:scale-95"
+                : "text-zinc-600 opacity-40 cursor-not-allowed border-white/5"
+            }`}
+            aria-label="Scroll filters left"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          {/* Filter Pills Container */}
+          <div
+            ref={filterScrollRef}
+            onScroll={checkScroll}
+            className="flex-1 flex items-center gap-2.5 overflow-x-auto scrollbar-none py-1 scroll-smooth"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {filterCategories.map((category) => {
+              const Icon = category.icon;
+              const isSelected = featuredOccasion === category.label;
+              const count = getCategoryCount(category.label);
+
+              return (
+                <button
+                  key={category.label}
+                  onClick={() => setFeaturedOccasion(category.label)}
+                  className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-all duration-300 whitespace-nowrap shrink-0 cursor-pointer ${
+                    isSelected
+                      ? "bg-gradient-to-r from-emerald-400 to-green-400 text-black font-semibold shadow-lg shadow-emerald-500/20 scale-[1.02]"
+                      : "bg-[#090e0b] hover:bg-[#0f1712] text-zinc-300 hover:text-white border border-white/10 hover:border-emerald-400/40"
+                  }`}
+                >
+                  <Icon
+                    className={`w-3.5 h-3.5 transition-colors ${
+                      isSelected ? "text-black" : "text-emerald-400 group-hover:scale-110"
+                    }`}
+                  />
+                  <span>{category.displayName}</span>
+                  <span
+                    className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md transition-colors ${
+                      isSelected
+                        ? "bg-black/20 text-black font-bold"
+                        : "bg-white/[0.06] text-zinc-400 group-hover:text-zinc-200"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Scroll Right Button */}
+          <button
+            onClick={() => scrollFilters("right")}
+            disabled={!canScrollRight}
+            className={`shrink-0 w-9 h-9 rounded-xl bg-[#090e0b] border border-white/10 flex items-center justify-center shadow-md transition-all cursor-pointer ${
+              canScrollRight
+                ? "text-zinc-200 hover:text-emerald-300 hover:border-emerald-400/50 hover:bg-[#0f1712] hover:scale-105 active:scale-95"
+                : "text-zinc-600 opacity-40 cursor-not-allowed border-white/5"
+            }`}
+            aria-label="Scroll filters right"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
+
+        {/* Photographers Grid */}
+        {filteredPhotographers.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredPhotographers.map((photographer) => (
+              <PhotographerCard
+                key={photographer.id}
+                photographer={photographer}
+                onQuickInquire={handleQuickInquire}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="py-16 text-center rounded-3xl glass-panel border border-white/10 p-8 max-w-lg mx-auto">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto mb-4 text-emerald-400">
+              <Camera className="w-7 h-7" />
+            </div>
+            <h3 className="text-lg font-serif font-bold text-white">No Artists Found in this Specialty</h3>
+            <p className="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">
+              We couldn&apos;t find featured creators for &ldquo;{featuredOccasion}&rdquo; right now.
+            </p>
+            <button
+              onClick={() => setFeaturedOccasion("All")}
+              className="mt-5 px-5 py-2 rounded-xl bg-emerald-400 text-black text-xs font-semibold hover:bg-emerald-300 transition-colors shadow-md shadow-emerald-500/20 cursor-pointer"
+            >
+              Reset to All Specialties
+            </button>
+          </div>
+        )}
 
         <div className="mt-12 text-center">
           <Link

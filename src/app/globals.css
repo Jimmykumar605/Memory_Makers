@@ -128,6 +128,31 @@ select:autofill {
   background: #34d399;
 }
 
+/* Modal & Floating Element Transparent Scrollbar */
+.modal-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(52, 211, 153, 0.3) transparent;
+}
+
+.modal-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.modal-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.modal-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(52, 211, 153, 0.25);
+  border-radius: 9999px;
+}
+
+.modal-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 211, 153, 0.6);
+}
+
 @keyframes progressIndeterminate {
   0% {
     transform: translateX(-100%);
