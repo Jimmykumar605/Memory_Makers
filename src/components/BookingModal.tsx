@@ -60,25 +60,64 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
     setSubmitting(true);
 
     try {
-      if (isSupabaseConfigured()) {
+      // Submit through server API to persist inquiry and dispatch notification email to the photographer
+      const res = await fetch("/api/inquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          photographerId: photographer.id,
+          photographerEmail: photographer.email,
+          photographerName: photographer.name,
+          businessName: photographer.businessName,
+          clientName,
+          clientEmail,
+          clientPhone,
+          occasion,
+          eventDate,
+          location: venueLocation,
+          budget: budget || undefined,
+          notes,
+        }),
+      });
+
+      if (!res.ok && isSupabaseConfigured()) {
+        // Client-side fallback insert if API returns error
         await supabase.from("inquiries").insert({
           photographer_id: photographer.id,
           client_name: clientName,
           client_email: clientEmail,
           client_phone: clientPhone,
           occasion: occasion,
-          event_date: eventDate,
-          location: venueLocation,
+          event_date: eventDate || null,
+          location: venueLocation || null,
           budget: budget ? parseFloat(budget) : null,
-          notes: notes,
+          notes: notes || null,
           status: "pending",
         });
-      } else {
-        await new Promise((resolve) => setTimeout(resolve, 800));
       }
+
       setSubmitted(true);
     } catch (err) {
-      console.error("Error submitting inquiry", err);
+      console.error("Error submitting inquiry:", err);
+      // Fallback direct insert if offline
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from("inquiries").insert({
+            photographer_id: photographer.id,
+            client_name: clientName,
+            client_email: clientEmail,
+            client_phone: clientPhone,
+            occasion: occasion,
+            event_date: eventDate || null,
+            location: venueLocation || null,
+            budget: budget ? parseFloat(budget) : null,
+            notes: notes || null,
+            status: "pending",
+          });
+        } catch {
+          // Ignore fallback error
+        }
+      }
       setSubmitted(true);
     } finally {
       setSubmitting(false);
