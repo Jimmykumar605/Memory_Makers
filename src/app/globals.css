@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #08090d;
+  --background: #050607;
   --foreground: #f3f4f6;
-  --card-bg: rgba(18, 19, 28, 0.7);
+  --card-bg: rgba(12, 16, 14, 0.8);
   --card-border: rgba(255, 255, 255, 0.08);
-  --gold-primary: #d4af37;
-  --gold-glow: rgba(212, 175, 55, 0.25);
-  --gold-accent: #f59e0b;
+  --green-primary: #34d399;
+  --green-glow: rgba(52, 211, 153, 0.25);
+  --green-accent: #10b981;
 }
 
 body {
@@ -15,47 +15,47 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
-  selection-background-color: #d4af37;
-  selection-color: #08090d;
 }
 
 ::selection {
-  background-color: #d4af37;
-  color: #08090d;
+  background-color: #34d399;
+  color: #050607;
 }
 
 /* Glassmorphism Utilities */
 .glass-panel {
-  background: rgba(15, 17, 26, 0.75);
+  background: rgba(9, 13, 11, 0.8);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.glass-panel-green,
 .glass-panel-gold {
-  background: radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.08) 0%, rgba(15, 17, 26, 0.8) 100%);
+  background: radial-gradient(circle at 50% 0%, rgba(52, 211, 153, 0.12) 0%, rgba(8, 12, 10, 0.88) 100%);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(52, 211, 153, 0.25);
 }
 
+.green-gradient-text,
 .gold-gradient-text {
-  background: linear-gradient(135deg, #fff7ed 0%, #fde68a 35%, #d97706 70%, #fef3c7 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #a7f3d0 30%, #34d399 70%, #10b981 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.gold-shimmer-border {
+.green-shimmer-border {
   position: relative;
 }
 
-.gold-shimmer-border::before {
+.green-shimmer-border::before {
   content: "";
   position: absolute;
   inset: -1px;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.5), rgba(255, 255, 255, 0.05), rgba(212, 175, 55, 0.3));
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.6), rgba(255, 255, 255, 0.05), rgba(16, 185, 129, 0.4));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -69,14 +69,43 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #08090d;
+  background: #050607;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1f2333;
+  background: #14201a;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #d4af37;
+  background: #34d399;
+}
+
+@keyframes progressIndeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes shimmerSweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.animate-progress-indeterminate {
+  animation: progressIndeterminate 1.8s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmerSweep 2s ease-in-out infinite;
 }

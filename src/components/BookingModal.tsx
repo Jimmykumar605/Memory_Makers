@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { X, Calendar, MapPin, DollarSign, CheckCircle2, Sparkles, Send } from "lucide-react";
 import { Photographer, OccasionType } from "@/lib/types";
 import { OCCASIONS } from "@/lib/data";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
+import { useAuth } from "@/lib/authContext";
 
 interface BookingModalProps {
   photographer: Photographer | null;
@@ -14,6 +15,7 @@ interface BookingModalProps {
 }
 
 export default function BookingModal({ photographer, isOpen, onClose }: BookingModalProps) {
+  const { user } = useAuth();
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
@@ -24,6 +26,14 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (user && isOpen) {
+      if (!clientName && user.name) setClientName(user.name);
+      if (!clientEmail && user.email) setClientEmail(user.email);
+      if (!clientPhone && user.phone) setClientPhone(user.phone);
+    }
+  }, [user, isOpen]);
 
   if (!isOpen || !photographer) return null;
 
@@ -46,13 +56,11 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
           status: "pending",
         });
       } else {
-        // Mock delay for UI smoothness
         await new Promise((resolve) => setTimeout(resolve, 800));
       }
       setSubmitted(true);
     } catch (err) {
       console.error("Error submitting inquiry", err);
-      // Still show success in offline/demo mode
       setSubmitted(true);
     } finally {
       setSubmitting(false);
@@ -72,8 +80,8 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl glass-panel-gold border border-amber-400/30 p-6 sm:p-8 shadow-2xl text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl glass-panel-green border border-emerald-400/30 p-6 sm:p-8 shadow-2xl text-white">
         {/* Close Button */}
         <button
           onClick={handleReset}
@@ -85,15 +93,15 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
 
         {submitted ? (
           <div className="py-8 text-center space-y-4 animate-in zoom-in-95 duration-300">
-            <div className="w-16 h-16 rounded-full bg-amber-400/20 border border-amber-400/40 mx-auto flex items-center justify-center text-amber-400">
+            <div className="w-16 h-16 rounded-full bg-emerald-400/20 border border-emerald-400/40 mx-auto flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/20">
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <h3 className="text-2xl font-serif font-bold text-white">Inquiry Sent to Artist!</h3>
             <p className="text-sm text-zinc-300 max-w-md mx-auto leading-relaxed">
-              Thank you, <strong className="text-amber-300">{clientName}</strong>. Your request for{" "}
+              Thank you, <strong className="text-emerald-300">{clientName}</strong>. Your request for{" "}
               <span className="text-white font-medium">{occasion}</span> photography on{" "}
               <span className="text-white font-medium">{eventDate || "your chosen date"}</span> has been transmitted directly to{" "}
-              <strong className="text-amber-400">{photographer.businessName}</strong>.
+              <strong className="text-emerald-400">{photographer.businessName}</strong>.
             </p>
             <div className="p-4 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-zinc-400 text-left max-w-sm mx-auto space-y-1">
               <div>• Artist will review dates and availability within 24 hours.</div>
@@ -101,7 +109,7 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
             </div>
             <button
               onClick={handleReset}
-              className="mt-6 px-6 py-2.5 rounded-xl bg-amber-400 text-black font-semibold text-sm hover:bg-amber-300 transition-colors shadow-lg shadow-amber-500/20"
+              className="mt-6 px-6 py-2.5 rounded-xl bg-emerald-400 text-black font-semibold text-sm hover:bg-emerald-300 transition-colors shadow-lg shadow-emerald-500/20"
             >
               Done
             </button>
@@ -110,7 +118,7 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
           <div>
             {/* Header info */}
             <div className="flex items-center gap-3.5 pb-5 border-b border-white/10">
-              <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-amber-400/40 shrink-0">
+              <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-emerald-400/40 shrink-0">
                 <Image
                   src={photographer.avatarUrl}
                   alt={photographer.name}
@@ -120,12 +128,12 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
                 />
               </div>
               <div>
-                <span className="text-[11px] font-mono uppercase tracking-widest text-amber-400 flex items-center gap-1">
+                <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-400 flex items-center gap-1 font-semibold">
                   <Sparkles className="w-3 h-3" /> Booking Inquiry
                 </span>
                 <h3 className="text-lg font-bold text-white">{photographer.businessName}</h3>
                 <p className="text-xs text-zinc-400">
-                  Based in {photographer.city} • Packages from ${photographer.startingPrice.toLocaleString()}
+                  Based in {photographer.city}, {photographer.state} • Packages from ₹{photographer.startingPrice.toLocaleString("en-IN")}
                 </p>
               </div>
             </div>
@@ -142,8 +150,8 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
                     required
                     value={clientName}
                     onChange={(e) => setClientName(e.target.value)}
-                    placeholder="e.g. Rachel Adams"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#090b12] border border-white/10 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 transition-colors"
+                    placeholder="e.g. Jasleen Kaur or Rohan Verma"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#060907] border border-white/10 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 transition-colors"
                   />
                 </div>
                 <div>
@@ -155,8 +163,8 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
                     required
                     value={clientEmail}
                     onChange={(e) => setClientEmail(e.target.value)}
-                    placeholder="rachel@example.com"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#090b12] border border-white/10 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 transition-colors"
+                    placeholder="jasleen@example.com"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#060907] border border-white/10 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 transition-colors"
                   />
                 </div>
               </div>
@@ -171,8 +179,8 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
                     required
                     value={clientPhone}
                     onChange={(e) => setClientPhone(e.target.value)}
-                    placeholder="+1 (555) 019-2834"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#090b12] border border-white/10 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 transition-colors"
+                    placeholder="+91 98765 43210"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#060907] border border-white/10 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 transition-colors"
                   />
                 </div>
                 <div>
@@ -182,10 +190,10 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
                   <select
                     value={occasion}
                     onChange={(e) => setOccasion(e.target.value as OccasionType)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#090b12] border border-white/10 text-sm text-white focus:outline-none focus:border-amber-400 transition-colors"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#060907] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 transition-colors"
                   >
                     {OCCASIONS.map((occ) => (
-                      <option key={occ.label} value={occ.label} className="bg-[#12141f]">
+                      <option key={occ.label} value={occ.label} className="bg-[#090d0b]">
                         {occ.label}
                       </option>
                     ))}
@@ -203,34 +211,34 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
                     required
                     value={eventDate}
                     onChange={(e) => setEventDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#090b12] border border-white/10 text-sm text-white focus:outline-none focus:border-amber-400 transition-colors"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#060907] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 transition-colors"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
-                    Venue City / Destination *
+                    Venue City & State *
                   </label>
                   <input
                     type="text"
                     required
                     value={venueLocation}
                     onChange={(e) => setVenueLocation(e.target.value)}
-                    placeholder="e.g. Udaipur or Lake Como"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#090b12] border border-white/10 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 transition-colors"
+                    placeholder="e.g. Amritsar, Jaipur, Chandigarh, Shimla or Delhi"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#060907] border border-white/10 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 transition-colors"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
-                  Estimated Photography Budget (USD)
+                  Estimated Photography Budget (INR ₹)
                 </label>
                 <input
                   type="number"
                   value={budget}
                   onChange={(e) => setBudget(e.target.value)}
-                  placeholder={`Starting at $${photographer.startingPrice}`}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#090b12] border border-white/10 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 transition-colors"
+                  placeholder={`Starting at ₹${photographer.startingPrice.toLocaleString("en-IN")}`}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#060907] border border-white/10 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 transition-colors"
                 />
               </div>
 
@@ -243,7 +251,7 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Tell the photographer about your celebration aesthetic, key moments, or schedule..."
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#090b12] border border-white/10 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 transition-colors resize-none"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#060907] border border-white/10 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 transition-colors resize-none"
                 />
               </div>
 
@@ -251,7 +259,7 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-black font-semibold uppercase tracking-wider text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 transition-all duration-300 disabled:opacity-50"
+                  className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 hover:from-emerald-300 hover:to-green-300 text-black font-semibold uppercase tracking-wider text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all duration-300 disabled:opacity-50 hover:scale-[1.01]"
                 >
                   {submitting ? (
                     <span>Submitting Request...</span>

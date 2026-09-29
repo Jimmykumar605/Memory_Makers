@@ -41,11 +41,17 @@ export interface Review {
   comment: string;
 }
 
+export type PhotographerStatus = "approved" | "pending" | "rejected" | "suspended";
+
 export interface Photographer {
   id: string;
   name: string;
   businessName: string;
   slug: string;
+  email?: string;
+  phone?: string;
+  status?: PhotographerStatus;
+  appliedDate?: string;
   avatarUrl: string;
   coverImageUrl: string;
   tagline: string;
@@ -87,3 +93,23 @@ export interface BookingInquiry {
   status: "pending" | "reviewed" | "accepted" | "declined";
   createdAt: string;
 }
+
+export type UserRole = "admin" | "photographer" | "client";
+
+export interface UserAccount {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: UserRole;
+  city: string;
+  state: string;
+  joinedDate: string;
+  status: "active" | "suspended" | "pending";
+  passwordHash?: string;
+  inquiriesCount?: number;
+  reviewsCount?: number;
+  photographerStatus?: PhotographerStatus;
+  businessName?: string;
+}
+

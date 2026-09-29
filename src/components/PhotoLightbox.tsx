@@ -57,7 +57,7 @@ export default function PhotoLightbox({
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-6 right-6 z-50 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+        className="absolute top-6 right-6 z-50 p-2.5 rounded-full bg-white/10 hover:bg-emerald-400/20 text-white hover:text-emerald-300 transition-colors"
         aria-label="Close lightbox"
       >
         <X className="w-6 h-6" />
@@ -67,7 +67,7 @@ export default function PhotoLightbox({
       {items.length > 1 && (
         <button
           onClick={handlePrev}
-          className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-50 p-3 rounded-full bg-black/50 hover:bg-white/20 text-white border border-white/10 transition-colors"
+          className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-50 p-3 rounded-full bg-black/60 hover:bg-emerald-400/20 text-white hover:text-emerald-300 border border-white/10 hover:border-emerald-400/40 transition-colors"
           aria-label="Previous photo"
         >
           <ChevronLeft className="w-6 h-6" />
@@ -78,7 +78,7 @@ export default function PhotoLightbox({
       {items.length > 1 && (
         <button
           onClick={handleNext}
-          className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-50 p-3 rounded-full bg-black/50 hover:bg-white/20 text-white border border-white/10 transition-colors"
+          className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-50 p-3 rounded-full bg-black/60 hover:bg-emerald-400/20 text-white hover:text-emerald-300 border border-white/10 hover:border-emerald-400/40 transition-colors"
           aria-label="Next photo"
         >
           <ChevronRight className="w-6 h-6" />
@@ -99,25 +99,25 @@ export default function PhotoLightbox({
         </div>
 
         {/* Caption & EXIF metadata bar */}
-        <div className="mt-4 w-full max-w-2xl px-5 py-3 rounded-xl bg-black/70 backdrop-blur-md border border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs text-zinc-300">
+        <div className="mt-4 w-full max-w-2xl px-5 py-3 rounded-xl bg-black/80 backdrop-blur-md border border-emerald-500/20 flex flex-wrap items-center justify-between gap-4 text-xs text-zinc-300">
           <div>
             <h4 className="font-semibold text-white text-sm">{item.title}</h4>
             {item.description && <p className="text-zinc-400 text-xs mt-0.5">{item.description}</p>}
           </div>
 
           <div className="flex items-center gap-4 flex-wrap">
-            <span className="px-2 py-0.5 rounded bg-amber-400/10 text-amber-300 border border-amber-400/20 font-medium">
+            <span className="px-2 py-0.5 rounded bg-emerald-400/15 text-emerald-300 border border-emerald-400/30 font-medium">
               {item.occasion}
             </span>
             {item.location && (
               <span className="flex items-center gap-1 text-zinc-400">
-                <MapPin className="w-3.5 h-3.5 text-amber-500" />
+                <MapPin className="w-3.5 h-3.5 text-emerald-400" />
                 {item.location}
               </span>
             )}
             {item.cameraGear && (
               <span className="flex items-center gap-1 text-zinc-400 font-mono text-[11px]">
-                <Camera className="w-3.5 h-3.5 text-amber-500" />
+                <Camera className="w-3.5 h-3.5 text-emerald-400" />
                 {item.cameraGear}
               </span>
             )}
