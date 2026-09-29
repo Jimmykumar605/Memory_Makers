@@ -30,8 +30,28 @@ import {
   LogOut,
   RefreshCw,
   AlertTriangle,
+  Edit3,
+  X,
+  Tag,
 } from "lucide-react";
 import { OCCASIONS, PRIMARY_REGIONS, ALL_INDIAN_STATES } from "@/lib/data";
+
+const DELIVERABLE_PRESET_OPTIONS = [
+  "Master color-graded images",
+  "Online cloud gallery",
+  "Full HD Highlights Film",
+  "4K Cinematic Teaser (1 min)",
+  "Full Length Wedding Film",
+  "Drone Aerial Cinematography",
+  "Candid Photography",
+  "Traditional Photography & Video",
+  "Pre-Wedding Shoot Included",
+  "Premium Hardcover Album (40 Pages)",
+  "Raw Footage & All Unedited Photos",
+  "Same-Day Edit / Instagram Reels",
+  "Multiple Shooters (2 Photographers + 2 Cinematographers)",
+  "Live YouTube / TV Streaming Setup",
+];
 import { PortfolioItem, Package, BookingInquiry, OccasionType, Photographer, PhotographerStatus } from "@/lib/types";
 import { uploadImageToSupabase } from "@/lib/supabase/storage";
 import { getStoredPhotographers, updatePhotographerStudio } from "@/lib/photographerStore";
@@ -105,8 +125,14 @@ export default function PhotographerDashboardPage() {
   const [newPkgName, setNewPkgName] = useState("");
   const [newPkgPrice, setNewPkgPrice] = useState("");
   const [newPkgDuration, setNewPkgDuration] = useState("");
-  const [newPkgDeliverables, setNewPkgDeliverables] = useState("");
   const [isSubmittingPackage, setIsSubmittingPackage] = useState(false);
+  const [selectedDeliverables, setSelectedDeliverables] = useState<string[]>([
+    "Master color-graded images",
+    "Online cloud gallery",
+    "Full HD Highlights Film",
+  ]);
+  const [customDeliverableInput, setCustomDeliverableInput] = useState("");
+  const [editingPackageId, setEditingPackageId] = useState<string | null>(null);
 
   // Inquiries State in INR (₹)
   const [inquiries, setInquiries] = useState<BookingInquiry[]>([]);
@@ -363,41 +389,70 @@ export default function PhotographerDashboardPage() {
     }
   };
 
-  // Add Package
-  const handleAddPackage = async (e: React.FormEvent) => {
+  // Add or Update Package
+  const handleSavePackage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmittingPackage || !newPkgName.trim() || !newPkgPrice) return;
 
-    // Guard against duplicate package names in current studio packages
     const trimmedName = newPkgName.trim();
+    // Guard against duplicate package names (excluding the one currently being edited)
     const isDuplicate = packages.some(
-      (pkg) => pkg.name.toLowerCase().trim() === trimmedName.toLowerCase()
+      (pkg) => pkg.id !== editingPackageId && pkg.name.toLowerCase().trim() === trimmedName.toLowerCase()
     );
     if (isDuplicate) {
       triggerSaveToast("A package with this title already exists. Please choose a unique name.");
       return;
     }
 
+    if (selectedDeliverables.length === 0) {
+      triggerSaveToast("Please select or type at least one package offer / deliverable.");
+      return;
+    }
+
     setIsSubmittingPackage(true);
     try {
-      const newPkg: Package = {
-        id: `pkg-${Date.now()}`,
-        name: trimmedName,
-        price: parseFloat(newPkgPrice),
-        duration: newPkgDuration.trim() || "Full Day",
-        description: "Custom tailored wedding collection",
-        deliverables: newPkgDeliverables
-          ? newPkgDeliverables.split(",").map((s) => s.trim()).filter(Boolean)
-          : ["Master color-graded images", "Online cloud gallery", "Full HD Highlights"],
-      };
+      let updatedPackages: Package[];
 
-      const updatedPackages = [...packages, newPkg];
+      if (editingPackageId) {
+        // Update existing package in place
+        updatedPackages = packages.map((pkg) =>
+          pkg.id === editingPackageId
+            ? {
+                ...pkg,
+                name: trimmedName,
+                price: parseFloat(newPkgPrice),
+                duration: newPkgDuration.trim() || "Full Day",
+                deliverables: [...selectedDeliverables],
+              }
+            : pkg
+        );
+        triggerSaveToast("Package details and offers updated!");
+      } else {
+        // Create new package
+        const newPkg: Package = {
+          id: `pkg-${Date.now()}`,
+          name: trimmedName,
+          price: parseFloat(newPkgPrice),
+          duration: newPkgDuration.trim() || "Full Day",
+          description: "Custom tailored wedding collection",
+          deliverables: [...selectedDeliverables],
+        };
+        updatedPackages = [...packages, newPkg];
+        triggerSaveToast("New package published!");
+      }
+
       setPackages(updatedPackages);
+      // Reset form
+      setEditingPackageId(null);
       setNewPkgName("");
       setNewPkgPrice("");
       setNewPkgDuration("");
-      setNewPkgDeliverables("");
-      triggerSaveToast("New package published!");
+      setSelectedDeliverables([
+        "Master color-graded images",
+        "Online cloud gallery",
+        "Full HD Highlights Film",
+      ]);
+      setCustomDeliverableInput("");
 
       if (activePhotographerId) {
         updatePhotographerStudio(activePhotographerId, { packages: updatedPackages }, false);
@@ -408,8 +463,59 @@ export default function PhotographerDashboardPage() {
     }
   };
 
+  const handleStartEditPackage = (pkg: Package) => {
+    setEditingPackageId(pkg.id);
+    setNewPkgName(pkg.name);
+    setNewPkgPrice(pkg.price.toString());
+    setNewPkgDuration(pkg.duration);
+    setSelectedDeliverables(pkg.deliverables && pkg.deliverables.length > 0 ? [...pkg.deliverables] : []);
+    setCustomDeliverableInput("");
+    const el = document.getElementById("package-builder-form");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  const handleCancelEditPackage = () => {
+    setEditingPackageId(null);
+    setNewPkgName("");
+    setNewPkgPrice("");
+    setNewPkgDuration("");
+    setSelectedDeliverables([
+      "Master color-graded images",
+      "Online cloud gallery",
+      "Full HD Highlights Film",
+    ]);
+    setCustomDeliverableInput("");
+  };
+
+  const handleToggleDeliverable = (item: string) => {
+    if (selectedDeliverables.includes(item)) {
+      setSelectedDeliverables(selectedDeliverables.filter((d) => d !== item));
+    } else {
+      setSelectedDeliverables([...selectedDeliverables, item]);
+    }
+  };
+
+  const handleAddCustomDeliverable = (e?: React.MouseEvent | React.KeyboardEvent) => {
+    if (e) e.preventDefault();
+    const trimmed = customDeliverableInput.trim();
+    if (!trimmed) return;
+    if (!selectedDeliverables.includes(trimmed)) {
+      setSelectedDeliverables([...selectedDeliverables, trimmed]);
+    }
+    setCustomDeliverableInput("");
+  };
+
+  const handleRemoveDeliverable = (itemToRemove: string) => {
+    setSelectedDeliverables(selectedDeliverables.filter((d) => d !== itemToRemove));
+  };
+
   // Delete Package
   const handleDeletePackage = async (id: string) => {
+    if (editingPackageId === id) {
+      handleCancelEditPackage();
+    }
     const updatedPackages = packages.filter((p) => p.id !== id);
     setPackages(updatedPackages);
     triggerSaveToast("Package removed.");
@@ -1385,74 +1491,214 @@ export default function PhotographerDashboardPage() {
         {/* =================================================================== */}
         {activeTab === "packages" && (
           <div className="space-y-8">
-            {/* Add Package Form */}
-            <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
-              <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase">
-                <Plus className="w-4 h-4" />
-                <span>Create New Wedding or Celebration Package</span>
-              </div>
-
-              <form onSubmit={handleAddPackage} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 items-end">
-                <div>
-                  <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
-                    Package Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newPkgName}
-                    onChange={(e) => setNewPkgName(e.target.value)}
-                    placeholder="e.g. Royal Anand Karaj 2-Day Signature"
-                    className="w-full px-3 py-2 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
-                    Price (INR ₹) *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    value={newPkgPrice}
-                    onChange={(e) => setNewPkgPrice(e.target.value)}
-                    placeholder="75000"
-                    className="w-full px-3 py-2 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
-                    Duration
-                  </label>
-                  <input
-                    type="text"
-                    value={newPkgDuration}
-                    onChange={(e) => setNewPkgDuration(e.target.value)}
-                    placeholder="Full Single Day (10 Hours)"
-                    className="w-full px-3 py-2 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmittingPackage}
-                  className={`w-full py-2.5 px-4 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-black font-semibold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all ${
-                    isSubmittingPackage ? "opacity-60 cursor-not-allowed" : "hover:scale-105 cursor-pointer"
-                  }`}
-                >
-                  {isSubmittingPackage ? (
+            {/* Add / Edit Package Form */}
+            <div id="package-builder-form" className="glass-panel p-6 sm:p-7 rounded-2xl border border-white/10 space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase">
+                  {editingPackageId ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Publishing...</span>
+                      <Edit3 className="w-4 h-4" />
+                      <span>Editing Package: <strong className="text-white font-bold">{newPkgName || "Package"}</strong></span>
                     </>
                   ) : (
                     <>
                       <Plus className="w-4 h-4" />
-                      <span>Publish Package</span>
+                      <span>Create New Wedding or Celebration Package</span>
                     </>
                   )}
-                </button>
+                </div>
+                {editingPackageId && (
+                  <button
+                    type="button"
+                    onClick={handleCancelEditPackage}
+                    className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 font-mono transition-colors cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Cancel Editing</span>
+                  </button>
+                )}
+              </div>
+
+              <form onSubmit={handleSavePackage} className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
+                      Package Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newPkgName}
+                      onChange={(e) => setNewPkgName(e.target.value)}
+                      placeholder="e.g. Royal Anand Karaj 2-Day Signature"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
+                      Price (INR ₹) *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      value={newPkgPrice}
+                      onChange={(e) => setNewPkgPrice(e.target.value)}
+                      placeholder="75000"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
+                      Duration / Coverage
+                    </label>
+                    <input
+                      type="text"
+                      value={newPkgDuration}
+                      onChange={(e) => setNewPkgDuration(e.target.value)}
+                      placeholder="e.g. Full Single Day (10 Hours) or 3 Days"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400"
+                    />
+                  </div>
+                </div>
+
+                {/* Deliverables / Package Offers Selection & Custom Input */}
+                <div className="space-y-3 pt-3 border-t border-white/5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="block text-[11px] font-mono uppercase text-emerald-400 font-semibold flex items-center gap-1.5">
+                        <Tag className="w-3.5 h-3.5" />
+                        <span>Included Offers & Deliverables ({selectedDeliverables.length} Selected)</span>
+                      </label>
+                      <p className="text-[11px] text-zinc-400 mt-0.5">
+                        Choose what you provide to customers. Click presets to toggle or enter custom inclusions manually.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 1. Quick Select Options / Presets */}
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-mono uppercase text-zinc-400 block font-semibold">
+                      Popular Inclusions (Click to Toggle):
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {DELIVERABLE_PRESET_OPTIONS.map((opt) => {
+                        const isSelected = selectedDeliverables.includes(opt);
+                        return (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => handleToggleDeliverable(opt)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                              isSelected
+                                ? "bg-emerald-400 text-black font-semibold shadow-md shadow-emerald-400/25 border border-emerald-300"
+                                : "bg-white/[0.04] text-zinc-300 hover:text-white border border-white/10 hover:border-emerald-400/40"
+                            }`}
+                          >
+                            <span className="text-xs">{isSelected ? "✓" : "+"}</span>
+                            <span>{opt}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 2. Manual Custom Offer Entry */}
+                  <div className="space-y-1.5 pt-2">
+                    <span className="text-[10px] font-mono uppercase text-zinc-400 block font-semibold">
+                      Or Enter Custom Deliverable Manually:
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={customDeliverableInput}
+                        onChange={(e) => setCustomDeliverableInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddCustomDeliverable();
+                          }
+                        }}
+                        placeholder="e.g. 2 Photographers + 1 Drone Operator, or 200 Printed 4x6 Fine Prints"
+                        className="flex-1 px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleAddCustomDeliverable()}
+                        disabled={!customDeliverableInput.trim()}
+                        className="px-4 py-2.5 rounded-xl bg-white/[0.08] hover:bg-emerald-400 hover:text-black text-xs font-semibold text-zinc-200 transition-all border border-white/10 disabled:opacity-40 disabled:cursor-not-allowed shrink-0 cursor-pointer"
+                      >
+                        + Add Offer
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 3. Selected Inclusions Chips */}
+                  {selectedDeliverables.length > 0 && (
+                    <div className="space-y-1.5 pt-2">
+                      <span className="text-[10px] font-mono uppercase text-zinc-400 block font-semibold">
+                        Current Package Offers ({selectedDeliverables.length}):
+                      </span>
+                      <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-black/40 border border-white/5">
+                        {selectedDeliverables.map((del, i) => (
+                          <span
+                            key={i}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-medium"
+                          >
+                            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>{del}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveDeliverable(del)}
+                              className="text-emerald-400/60 hover:text-rose-400 p-0.5 rounded transition-colors ml-0.5 cursor-pointer"
+                              title="Remove Offer"
+                            >
+                              ✕
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Form Action Buttons */}
+                <div className="pt-2 flex items-center justify-end gap-3 border-t border-white/10">
+                  {editingPackageId && (
+                    <button
+                      type="button"
+                      onClick={handleCancelEditPackage}
+                      className="px-4 py-2.5 rounded-xl bg-white/[0.04] text-xs font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={isSubmittingPackage}
+                    className={`py-2.5 px-6 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-black font-semibold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 transition-all ${
+                      isSubmittingPackage ? "opacity-60 cursor-not-allowed" : "hover:scale-105 cursor-pointer"
+                    }`}
+                  >
+                    {isSubmittingPackage ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : editingPackageId ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>Save Package Changes</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4" />
+                        <span>Publish Package</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </form>
             </div>
 
@@ -1474,10 +1720,21 @@ export default function PhotographerDashboardPage() {
                 {packages.map((pkg) => (
                   <div
                     key={pkg.id}
-                    className="p-6 rounded-2xl glass-panel border border-white/10 hover:border-emerald-400/30 flex flex-col justify-between space-y-4 transition-colors"
+                    className={`p-6 rounded-2xl glass-panel border flex flex-col justify-between space-y-4 transition-all ${
+                      editingPackageId === pkg.id
+                        ? "border-emerald-400 shadow-lg shadow-emerald-500/20 ring-1 ring-emerald-400/50"
+                        : "border-white/10 hover:border-emerald-400/30"
+                    }`}
                   >
                     <div className="space-y-2">
-                      <h3 className="text-lg font-serif font-bold text-white">{pkg.name}</h3>
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-lg font-serif font-bold text-white">{pkg.name}</h3>
+                        {editingPackageId === pkg.id && (
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-400 text-black text-[10px] font-mono font-bold uppercase shrink-0">
+                            Editing
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs font-mono text-emerald-400">{pkg.duration}</p>
                       <div className="text-2xl font-extrabold text-white pt-2">
                         ₹{pkg.price.toLocaleString("en-IN")}{" "}
@@ -1485,21 +1742,37 @@ export default function PhotographerDashboardPage() {
                       </div>
 
                       <div className="pt-3 space-y-1.5 text-xs text-zinc-300">
-                        {pkg.deliverables.map((del, i) => (
-                          <div key={i} className="flex items-start gap-2">
-                            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                            <span>{del}</span>
-                          </div>
-                        ))}
+                        {pkg.deliverables && pkg.deliverables.length > 0 ? (
+                          pkg.deliverables.map((del, i) => (
+                            <div key={i} className="flex items-start gap-2">
+                              <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                              <span>{del}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-xs text-zinc-500 italic">No specific inclusions defined.</p>
+                        )}
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => handleDeletePackage(pkg.id)}
-                      className="w-full py-2 rounded-lg border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 text-xs transition-colors cursor-pointer"
-                    >
-                      Remove Package
-                    </button>
+                    <div className="pt-3 border-t border-white/10 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleStartEditPackage(pkg)}
+                        className="flex-1 py-2 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 hover:text-emerald-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Edit Offers</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePackage(pkg.id)}
+                        className="py-2 px-3 rounded-xl border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 text-xs transition-colors cursor-pointer flex items-center justify-center gap-1"
+                        title="Remove Package"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
