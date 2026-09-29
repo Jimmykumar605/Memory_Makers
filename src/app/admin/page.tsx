@@ -12,6 +12,7 @@ import {
   Search,
   Filter,
   Eye,
+  EyeOff,
   Camera,
   MapPin,
   IndianRupee,
@@ -560,7 +561,7 @@ export default function AdminPortalPage() {
                   Master Admin Email
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-emerald-400/60 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Mail className="w-4 h-4 text-emerald-400/60 absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
                   <input
                     type="email"
                     required
@@ -578,7 +579,7 @@ export default function AdminPortalPage() {
                   Security Passkey
                 </label>
                 <div className="relative">
-                  <KeyRound className="w-4 h-4 text-emerald-400/60 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <KeyRound className="w-4 h-4 text-emerald-400/60 absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
                   <input
                     type={showPassword ? "text" : "password"}
                     required
@@ -586,14 +587,20 @@ export default function AdminPortalPage() {
                     onChange={(e) => setPasswordInput(e.target.value)}
                     placeholder="Enter security passkey"
                     autoComplete="new-password"
-                    className="w-full pl-10 pr-12 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 transition-all font-mono"
+                    className="w-full pl-10 pr-11 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 transition-all font-mono"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-zinc-400 hover:text-emerald-400"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-1.5 text-zinc-400 hover:text-emerald-400 hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
+                    title={showPassword ? "Hide passkey" : "Show passkey"}
+                    aria-label={showPassword ? "Hide passkey" : "Show passkey"}
                   >
-                    {showPassword ? "HIDE" : "SHOW"}
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               </div>

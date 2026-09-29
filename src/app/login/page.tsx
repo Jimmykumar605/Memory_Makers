@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Camera, Sparkles, Heart, ArrowRight, ShieldCheck, Mail, Lock, User, Loader2, LogOut, Clock, RefreshCw } from "lucide-react";
+import { Camera, Sparkles, Heart, ArrowRight, ShieldCheck, Mail, Lock, User, Loader2, LogOut, Clock, RefreshCw, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { PRIMARY_REGIONS, ALL_INDIAN_STATES } from "@/lib/data";
 
@@ -20,6 +20,7 @@ function LoginContent() {
   );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [state, setState] = useState("Punjab");
@@ -315,7 +316,7 @@ function LoginContent() {
                         Your Full Name
                       </label>
                       <div className="relative">
-                        <User className="w-4 h-4 text-emerald-400/60 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <User className="w-4 h-4 text-emerald-400/60 absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
                         <input
                           type="text"
                           required
@@ -334,7 +335,7 @@ function LoginContent() {
                             Business / Studio Name *
                           </label>
                           <div className="relative">
-                            <Camera className="w-4 h-4 text-emerald-400/60 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <Camera className="w-4 h-4 text-emerald-400/60 absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
                             <input
                               type="text"
                               required
@@ -409,7 +410,7 @@ function LoginContent() {
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-emerald-400/60 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Mail className="w-4 h-4 text-emerald-400/60 absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
                 <input
                   type="email"
                   required
@@ -426,15 +427,28 @@ function LoginContent() {
                 Password
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-emerald-400/60 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Lock className="w-4 h-4 text-emerald-400/60 absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 transition-all"
+                  className="w-full pl-10 pr-11 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 transition-all font-mono"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-1.5 text-zinc-400 hover:text-emerald-400 hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
+                  title={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
               </div>
             </div>
 
