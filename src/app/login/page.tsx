@@ -182,6 +182,16 @@ function LoginContent() {
       setForgotStep(2);
       setForgotSuccessMsg(data.message || `A 6-digit OTP code has been sent to ${cleanEmail}`);
       setResendCooldown(45);
+
+      // Store dynamic OTP session in sessionStorage with expiration
+      if (typeof window !== "undefined") {
+        const otpSessionData = {
+          email: cleanEmail,
+          expiresAt: data.expiresAt || (Date.now() + 10 * 60 * 1000),
+          createdAt: Date.now(),
+        };
+        sessionStorage.setItem("mm_otp_session", JSON.stringify(otpSessionData));
+      }
     } catch {
       setForgotError("Network error while connecting to security verification service.");
     } finally {
@@ -196,6 +206,24 @@ function LoginContent() {
       setForgotError("Please enter the complete 6-digit verification code.");
       return;
     }
+
+    // Check if OTP session expired in sessionStorage
+    if (typeof window !== "undefined") {
+      const rawSession = sessionStorage.getItem("mm_otp_session");
+      if (rawSession) {
+        try {
+          const parsed = JSON.parse(rawSession);
+          if (Date.now() > parsed.expiresAt) {
+            sessionStorage.removeItem("mm_otp_session");
+            setForgotError("This OTP code has expired. Please request a new verification code.");
+            return;
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+
     setForgotLoading(true);
     setForgotError("");
     setForgotSuccessMsg("");
@@ -210,6 +238,11 @@ function LoginContent() {
       if (!res.ok || data.error) {
         setForgotError(data.error || "Invalid or expired OTP code.");
         return;
+      }
+
+      // Mark verified in sessionStorage
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("mm_otp_verified", "true");
       }
 
       setForgotStep(3);
@@ -252,7 +285,13 @@ function LoginContent() {
         return;
       }
 
-      // Success! Switch back to login
+      // Success! Remove OTP completely from sessionStorage
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("mm_otp_session");
+        sessionStorage.removeItem("mm_otp_verified");
+      }
+
+      // Switch back to login
       setIsForgotPassword(false);
       setForgotStep(1);
       setEmail(forgotEmail.trim());
@@ -553,6 +592,10 @@ function LoginContent() {
                     onClick={() => {
                       setIsForgotPassword(false);
                       setForgotError("");
+                      if (typeof window !== "undefined") {
+                        sessionStorage.removeItem("mm_otp_session");
+                        sessionStorage.removeItem("mm_otp_verified");
+                      }
                     }}
                     className="w-full text-center text-xs text-zinc-400 hover:text-white py-1 transition-colors cursor-pointer"
                   >

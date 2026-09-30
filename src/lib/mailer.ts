@@ -1,6 +1,4 @@
 import nodemailer from "nodemailer";
-import fs from "fs";
-import path from "path";
 
 export interface SentEmailRecord {
   id: string;
@@ -15,42 +13,17 @@ export interface SentEmailRecord {
   type?: "approval" | "inquiry" | "otp";
 }
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const SENT_EMAILS_FILE = path.join(DATA_DIR, "sent_emails.json");
-
-function ensureSentEmailsFile() {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    if (!fs.existsSync(SENT_EMAILS_FILE)) {
-      fs.writeFileSync(SENT_EMAILS_FILE, JSON.stringify([]), "utf8");
-    }
-  } catch (err) {
-    console.warn("Could not initialize sent emails store:", err);
-  }
-}
+// Pure in-memory dynamic audit log (No JSON files on disk)
+const inMemorySentEmails: SentEmailRecord[] = [];
 
 export function getSentEmails(): SentEmailRecord[] {
-  try {
-    ensureSentEmailsFile();
-    if (!fs.existsSync(SENT_EMAILS_FILE)) return [];
-    const raw = fs.readFileSync(SENT_EMAILS_FILE, "utf8");
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  return [...inMemorySentEmails];
 }
 
 function saveSentEmailRecord(record: SentEmailRecord): void {
-  try {
-    ensureSentEmailsFile();
-    const list = getSentEmails();
-    list.unshift(record);
-    fs.writeFileSync(SENT_EMAILS_FILE, JSON.stringify(list.slice(0, 100), null, 2), "utf8");
-  } catch (err) {
-    console.error("Failed to save sent email record:", err);
+  inMemorySentEmails.unshift(record);
+  if (inMemorySentEmails.length > 100) {
+    inMemorySentEmails.pop();
   }
 }
 

@@ -46,9 +46,9 @@ export async function POST(req: NextRequest) {
         dbUser?.name || photographerProfile?.name || normEmail.split("@")[0];
 
       // 2. Generate 6-digit OTP (valid for 10 minutes)
-      const { otp: generatedOtp } = createOtp(normEmail);
+      const { otp: generatedOtp, expiresAt } = createOtp(normEmail);
 
-      // 3. Dispatch Email via SMTP or local audit store
+      // 3. Dispatch Email via SMTP or dynamic in-memory store
       const mailResult = await sendPasswordResetOtpEmail({
         to: normEmail,
         userName,
@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
         message:
           "A 6-digit verification code has been dispatched to your email address.",
         mode: mailResult.mode,
+        expiresAt,
       });
     }
 

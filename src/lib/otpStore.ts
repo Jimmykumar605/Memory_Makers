@@ -1,6 +1,3 @@
-import fs from "fs";
-import path from "path";
-
 export interface OtpRecord {
   email: string;
   otp: string;
@@ -8,48 +5,11 @@ export interface OtpRecord {
   createdAt: number;
 }
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const OTPS_FILE = path.join(DATA_DIR, "otps.json");
-
-// In-memory cache for fast access across concurrent API calls
+// Pure in-memory cache for dynamic OTP verification (No JSON files on disk)
 const memoryOtpCache = new Map<string, OtpRecord>();
 
-function ensureOtpFile() {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    if (!fs.existsSync(OTPS_FILE)) {
-      fs.writeFileSync(OTPS_FILE, JSON.stringify({}), "utf8");
-    }
-  } catch (err) {
-    console.warn("Could not ensure OTP file:", err);
-  }
-}
-
-function loadOtps(): Record<string, OtpRecord> {
-  try {
-    ensureOtpFile();
-    if (!fs.existsSync(OTPS_FILE)) return {};
-    const raw = fs.readFileSync(OTPS_FILE, "utf8");
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object" ? parsed : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveOtps(otps: Record<string, OtpRecord>): void {
-  try {
-    ensureOtpFile();
-    fs.writeFileSync(OTPS_FILE, JSON.stringify(otps, null, 2), "utf8");
-  } catch (err) {
-    console.error("Failed to save OTP file:", err);
-  }
-}
-
 /**
- * Generate and store a secure 6-digit OTP valid for 10 minutes
+ * Generate and store a secure 6-digit OTP valid for 10 minutes purely in dynamic memory
  */
 export function createOtp(email: string): { otp: string; expiresAt: number } {
   const normEmail = email.trim().toLowerCase();
@@ -65,19 +25,16 @@ export function createOtp(email: string): { otp: string; expiresAt: number } {
     createdAt: now,
   };
 
-  // Save to memory
+  // Save to in-memory map
   memoryOtpCache.set(normEmail, record);
 
-  // Save to persistent file
-  const otps = loadOtps();
-  // Clean expired OTPs while writing
-  for (const [key, val] of Object.entries(otps)) {
-    if (val.expiresAt < now) {
-      delete otps[key];
+  // Automatically purge when expired after 10 minutes
+  setTimeout(() => {
+    const existing = memoryOtpCache.get(normEmail);
+    if (existing && existing.expiresAt <= Date.now()) {
+      memoryOtpCache.delete(normEmail);
     }
-  }
-  otps[normEmail] = record;
-  saveOtps(otps);
+  }, 10 * 60 * 1000).unref?.();
 
   return { otp, expiresAt };
 }
@@ -92,25 +49,17 @@ export function verifyOtp(
   const normEmail = email.trim().toLowerCase();
   const cleanOtp = enteredOtp.trim();
 
-  let record = memoryOtpCache.get(normEmail);
-  if (!record) {
-    const otps = loadOtps();
-    record = otps[normEmail];
-  }
+  const record = memoryOtpCache.get(normEmail);
 
   if (!record) {
     return {
       valid: false,
-      error: "No OTP was requested for this email or it has already been used.",
+      error: "No OTP was requested for this email or it has already expired.",
     };
   }
 
   if (Date.now() > record.expiresAt) {
-    // Expired
     memoryOtpCache.delete(normEmail);
-    const otps = loadOtps();
-    delete otps[normEmail];
-    saveOtps(otps);
     return {
       valid: false,
       error: "This OTP has expired. Please request a new verification code.",
@@ -141,10 +90,6 @@ export function consumeOtp(
 
   const normEmail = email.trim().toLowerCase();
   memoryOtpCache.delete(normEmail);
-
-  const otps = loadOtps();
-  delete otps[normEmail];
-  saveOtps(otps);
 
   return { valid: true };
 }
