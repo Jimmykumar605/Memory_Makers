@@ -7,7 +7,6 @@ import {
 } from "@/lib/supabase/service";
 import { verifyPassword } from "@/lib/authUtils";
 import { UserAccount } from "@/lib/types";
-import { findServerUserByEmail } from "@/lib/serverUserStore";
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,11 +29,8 @@ export async function POST(req: NextRequest) {
 
     const normEmail = email.trim().toLowerCase();
 
-    // 1. Query dynamic user account from Supabase DB public.users table or persistent store
+    // 1. Query dynamic user account directly from Supabase DB public.users table
     let dbUser = await fetchUserByEmailFromSupabase(normEmail);
-    if (!dbUser) {
-      dbUser = findServerUserByEmail(normEmail) || null;
-    }
 
     // 1b. Check if this email belongs to a photographer in public.profiles!
     let photographerProfile = null;
@@ -61,7 +57,6 @@ export async function POST(req: NextRequest) {
       // Asynchronously sync to public.users table in Supabase
       createUserInSupabase(dbUser).catch(() => { });
     }
-
 
     // 3. Authenticate with Supabase Auth if configured and password provided
     let authUser = null;
@@ -115,16 +110,6 @@ export async function POST(req: NextRequest) {
       }
     } else {
       // Public User & Photographer Login (/login)
-      if (activeUser.role === "admin") {
-        return NextResponse.json(
-          {
-            error:
-              "Access Denied: Administrator accounts cannot sign in through the public user/photographer portal. Please use the dedicated Master Admin Portal directly.",
-          },
-          { status: 403 }
-        );
-      }
-
       if (preferredRole === "photographer" && photographerProfile) {
         activeUser.role = "photographer";
       }

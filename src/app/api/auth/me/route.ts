@@ -4,7 +4,6 @@ import {
   fetchUserByEmailFromSupabase,
   fetchAllPhotographersFromSupabase,
 } from "@/lib/supabase/service";
-import { findServerUserByEmail } from "@/lib/serverUserStore";
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,11 +12,8 @@ export async function GET(req: NextRequest) {
 
     if (emailHeader) {
       const normEmail = emailHeader.trim().toLowerCase();
-      // 1. Query registered user account from Supabase DB or server user store
+      // 1. Query registered user account directly from Supabase DB
       let user = await fetchUserByEmailFromSupabase(normEmail);
-      if (!user) {
-        user = findServerUserByEmail(normEmail) || null;
-      }
 
       // 2. Only if no user record exists, check if unlinked photographer profile exists
       if (!user) {
@@ -74,10 +70,7 @@ export async function GET(req: NextRequest) {
       } = await supabase.auth.getUser();
 
       if (user && user.email) {
-        let dbUser = await fetchUserByEmailFromSupabase(user.email);
-        if (!dbUser) {
-          dbUser = findServerUserByEmail(user.email) || null;
-        }
+        const dbUser = await fetchUserByEmailFromSupabase(user.email);
         const safe = dbUser ? (({ passwordHash: _, ...rest }) => rest)(dbUser) : null;
         return NextResponse.json({
           success: true,

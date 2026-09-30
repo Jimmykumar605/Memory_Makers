@@ -65,7 +65,7 @@ import { useAuth } from "@/lib/authContext";
 
 export default function PhotographerDashboardPage() {
   const router = useRouter();
-  const { user, logout, refreshUser } = useAuth();
+  const { user, logout, refreshUser, updateUserSession } = useAuth();
 
   useEffect(() => {
     if (user?.role === "admin") {
@@ -146,6 +146,9 @@ export default function PhotographerDashboardPage() {
 
   function applyProfile(p: Partial<Photographer> & { id: string }) {
     setActivePhotographerId(p.id);
+    if (typeof window !== "undefined" && p.id) {
+      localStorage.setItem("mm_active_photographer_id", p.id);
+    }
     setStudioStatus(p.status || "approved");
     setPhotographerSlug(p.slug || "");
     setBusinessName(p.businessName || "");
@@ -203,8 +206,14 @@ export default function PhotographerDashboardPage() {
         if (remote && remote.length > 0) {
           let matched: Photographer | undefined = undefined;
 
+          // 0. Try matching persistent photographer ID stored in localStorage or active state
+          const cachedPhotoId = typeof window !== "undefined" ? localStorage.getItem("mm_active_photographer_id") : null;
+          if (cachedPhotoId) {
+            matched = remote.find((p) => p.id === cachedPhotoId);
+          }
+
           // 1. Try matching logged in user's email
-          if (user?.email) {
+          if (!matched && user?.email) {
             matched = remote.find((p) => p.email?.toLowerCase() === user.email.toLowerCase());
           }
           // 2. Try matching user ID
@@ -557,6 +566,39 @@ export default function PhotographerDashboardPage() {
   const handleSaveProfile = async () => {
     if (!activePhotographerId) return;
 
+    const trimmedEmail = email.trim();
+
+    // If photographer changed their email, safely update login email in user account & DB
+    if (user?.email && trimmedEmail && trimmedEmail.toLowerCase() !== user.email.toLowerCase()) {
+      try {
+        const updateRes = await fetch("/api/auth/update-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            oldEmail: user.email,
+            newEmail: trimmedEmail,
+            photographerId: activePhotographerId,
+            role: "photographer",
+          }),
+        });
+
+        const updateData = await updateRes.json();
+        if (!updateRes.ok || updateData.error) {
+          triggerSaveToast(updateData.error || "Failed to update email address. Email might be in use.");
+          return;
+        }
+
+        // Update active session in authContext & localStorage immediately
+        updateUserSession({ email: trimmedEmail });
+        if (typeof window !== "undefined") {
+          localStorage.setItem("mm_active_photographer_id", activePhotographerId);
+        }
+      } catch {
+        triggerSaveToast("Network error updating email address. Please try again.");
+        return;
+      }
+    }
+
     const updates = {
       name: artistName,
       businessName,
@@ -565,7 +607,7 @@ export default function PhotographerDashboardPage() {
       city,
       state: stateRegion,
       phone: phone.trim(),
-      email: email.trim(),
+      email: trimmedEmail,
       gender,
       experienceYears: Number(experienceYears) || 0,
       startingPrice,
@@ -585,7 +627,7 @@ export default function PhotographerDashboardPage() {
 
     updatePhotographerStudio(activePhotographerId, updates);
     await updatePhotographerStudioInSupabase(activePhotographerId, updates);
-    triggerSaveToast("Studio profile changes saved to Supabase database!");
+    triggerSaveToast("Studio profile changes saved! Login email updated successfully.");
   };
 
   const handleUpdateInquiryStatus = async (id: string, status: "accepted" | "declined") => {

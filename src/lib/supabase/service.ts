@@ -801,4 +801,142 @@ export async function updateInquiryStatusInSupabase(
   }
 }
 
+// 19. Update user email in Supabase (users table and profiles table)
+export async function updateUserEmailInSupabase(
+  oldEmail: string,
+  newEmail: string,
+  userId?: string,
+  photographerId?: string
+): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+  try {
+    const normOld = oldEmail.trim().toLowerCase();
+    const normNew = newEmail.trim().toLowerCase();
+
+    // 1. Update public.profiles table (Photographer profile)
+    if (photographerId) {
+      await supabase.from("profiles").update({ email: normNew }).eq("id", photographerId);
+    }
+    await supabase.from("profiles").update({ email: normNew }).ilike("email", normOld);
+
+    // 2. Fetch existing user from users table to preserve passwordHash and profile info
+    const existing = await fetchUserByEmailFromSupabase(normOld);
+    const targetUserId = userId || existing?.id || photographerId || "usr-" + Date.now();
+    const targetName = existing?.name || normNew.split("@")[0];
+    const targetPhone = existing?.phone || "";
+    const targetRole = existing?.role || "photographer";
+    const targetStatus = existing?.status || "active";
+    const targetCity = existing?.city || "Amritsar";
+    const targetState = existing?.state || "Punjab";
+    const targetJoined = existing?.joinedDate || "Recent";
+    const targetPass = existing?.passwordHash || "";
+
+    // 3. Upsert into public.users with new email via SECURITY DEFINER procedure
+    try {
+      const { error: rpcErr } = await supabase.rpc("create_or_update_user", {
+        p_id: targetUserId,
+        p_name: targetName,
+        p_email: normNew,
+        p_phone: targetPhone,
+        p_role: targetRole,
+        p_status: targetStatus,
+        p_city: targetCity,
+        p_state: targetState,
+        p_joined_date: targetJoined,
+        p_password_hash: targetPass,
+      });
+
+      if (rpcErr && rpcErr.code === "23505") {
+        // If primary key collision with old ID, assign fresh user ID for the new login email
+        await supabase.rpc("create_or_update_user", {
+          p_id: "usr-" + Date.now(),
+          p_name: targetName,
+          p_email: normNew,
+          p_phone: targetPhone,
+          p_role: targetRole,
+          p_status: targetStatus,
+          p_city: targetCity,
+          p_state: targetState,
+          p_joined_date: targetJoined,
+          p_password_hash: targetPass,
+        });
+      }
+    } catch (e) {
+      console.warn("RPC update email error:", e);
+    }
+
+    return true;
+  } catch (err) {
+    console.warn("updateUserEmailInSupabase exception:", err);
+    return false;
+  }
+}
+
+// 20. Update user password directly in Supabase database (with RPC bypass for RLS)
+export async function updateUserPasswordInSupabase(
+  email: string,
+  passwordHash: string
+): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+  try {
+    const normEmail = email.trim().toLowerCase();
+
+    // 1. Fetch user to preserve all existing columns
+    let existing = await fetchUserByEmailFromSupabase(normEmail);
+
+    // If not found in users table, check if registered in photographer profiles
+    if (!existing) {
+      const photographers = await fetchAllPhotographersFromSupabase();
+      const p = photographers?.find((item) => item.email?.toLowerCase() === normEmail);
+      if (p) {
+        existing = {
+          id: p.id,
+          name: p.name,
+          email: normEmail,
+          phone: p.phone,
+          role: "photographer",
+          status: "active",
+          city: p.city,
+          state: p.state,
+          joinedDate: p.appliedDate || "2024",
+        };
+      }
+    }
+
+    const userId = existing?.id || "usr-" + Date.now();
+    const userName = existing?.name || normEmail.split("@")[0];
+    const userPhone = existing?.phone || "";
+    const userRole = existing?.role || "client";
+    const userStatus = existing?.status || "active";
+    const userCity = existing?.city || "New Delhi";
+    const userState = existing?.state || "Delhi NCR";
+    const userJoined = existing?.joinedDate || "Recent";
+
+    // 2. Call create_or_update_user RPC (which has SECURITY DEFINER and bypasses RLS)
+    const { data: rpcData, error: rpcError } = await supabase.rpc("create_or_update_user", {
+      p_id: userId,
+      p_name: userName,
+      p_email: normEmail,
+      p_phone: userPhone,
+      p_role: userRole,
+      p_status: userStatus,
+      p_city: userCity,
+      p_state: userState,
+      p_joined_date: userJoined,
+      p_password_hash: passwordHash,
+    });
+
+    if (rpcError) {
+      console.warn("create_or_update_user RPC error updating password:", rpcError);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.warn("updateUserPasswordInSupabase exception:", err);
+    return false;
+  }
+}
+
+
 

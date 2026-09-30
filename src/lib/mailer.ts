@@ -12,7 +12,7 @@ export interface SentEmailRecord {
   status: "delivered" | "dispatched_local" | "failed";
   error?: string;
   previewHtml?: string;
-  type?: "approval" | "inquiry";
+  type?: "approval" | "inquiry" | "otp";
 }
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -64,7 +64,7 @@ async function dispatchEmail(params: {
   htmlContent: string;
   photographerName: string;
   businessName: string;
-  type: "approval" | "inquiry";
+  type: "approval" | "inquiry" | "otp";
 }): Promise<{
   success: boolean;
   messageId?: string;
@@ -469,3 +469,115 @@ Access your Studio Dashboard: ${dashboardUrl}
     type: "inquiry",
   });
 }
+
+// -----------------------------------------------------------------------------
+// 3. Password Reset OTP Email
+// -----------------------------------------------------------------------------
+export interface SendPasswordResetOtpEmailParams {
+  to: string;
+  userName?: string;
+  otp: string;
+}
+
+export async function sendPasswordResetOtpEmail(
+  params: SendPasswordResetOtpEmailParams
+): Promise<{
+  success: boolean;
+  messageId?: string;
+  mode: "smtp" | "local_store";
+  error?: string;
+}> {
+  const { to, userName = "Member", otp } = params;
+
+  const subject = `🔐 MemoryMakers Security OTP: ${otp} (Password Reset)`;
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Password OTP - MemoryMakers</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #040507; color: #e4e4e7; margin: 0; padding: 0; }
+    .container { max-width: 560px; margin: 40px auto; background-color: #080d0a; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6); }
+    .header { background: linear-gradient(135deg, #07150e 0%, #0d281a 100%); padding: 36px 30px; text-align: center; border-bottom: 1px solid rgba(16, 185, 129, 0.2); }
+    .security-badge { display: inline-block; padding: 7px 16px; border-radius: 9999px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 12px; }
+    .title { color: #ffffff; font-size: 24px; font-weight: 700; margin: 0; font-family: Georgia, serif; }
+    .subtitle { color: #a1a1aa; font-size: 13px; margin-top: 8px; }
+    .body { padding: 32px 30px; }
+    .greeting { font-size: 16px; color: #f4f4f5; font-weight: 600; margin-bottom: 14px; }
+    .paragraph { font-size: 14px; line-height: 1.65; color: #a1a1aa; margin-bottom: 20px; }
+    .otp-card { background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.03) 100%); border: 1.5px dashed rgba(52, 211, 153, 0.5); border-radius: 16px; padding: 26px 20px; margin: 24px 0; text-align: center; }
+    .otp-label { color: #34d399; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 12px; }
+    .otp-code { font-family: 'Courier New', Courier, monospace; font-size: 38px; font-weight: 800; letter-spacing: 0.3em; color: #ffffff; text-shadow: 0 0 20px rgba(52, 211, 153, 0.4); margin: 6px 0; display: inline-block; padding: 6px 16px; background: rgba(0, 0, 0, 0.4); border-radius: 10px; }
+    .otp-timer { color: #f59e0b; font-size: 12px; font-weight: 600; margin-top: 12px; }
+    .alert-box { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px; font-size: 12px; color: #71717a; line-height: 1.6; margin-top: 24px; }
+    .footer { background: #040605; padding: 22px 30px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.06); font-size: 11px; color: #52525b; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="security-badge">🛡️ MemoryMakers Security</div>
+      <h1 class="title">Password Reset Verification</h1>
+      <p class="subtitle">Secure One-Time Password (OTP)</p>
+    </div>
+
+    <div class="body">
+      <p class="greeting">Hello ${userName},</p>
+      <p class="paragraph">
+        We received a request to reset the password for your MemoryMakers account associated with <strong>${to}</strong>.
+      </p>
+
+      <div class="otp-card">
+        <div class="otp-label">Your Verification Code</div>
+        <div class="otp-code">${otp}</div>
+        <div class="otp-timer">⏱️ This code is valid for 10 minutes</div>
+      </div>
+
+      <p class="paragraph" style="font-size: 13px;">
+        Enter this 6-digit code on the reset password screen to verify your identity and set a new password.
+      </p>
+
+      <div class="alert-box">
+        <strong>🔒 Security Notice:</strong> If you did not request this verification code, please ignore this email. No changes will be made to your account without this code. Never share your OTP with anyone.
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>© ${new Date().getFullYear()} MemoryMakers Inc. All rights reserved.</p>
+      <p>This automated security message was sent to ${to}.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  const textContent = `
+MemoryMakers Password Reset Verification
+
+Hello ${userName},
+
+We received a request to reset the password for your MemoryMakers account (${to}).
+
+Your 6-digit verification OTP code is: ${otp}
+
+This code is valid for 10 minutes. Please enter it on the reset password screen to update your password.
+
+If you did not request a password reset, you can safely ignore this email.
+
+— MemoryMakers Security Team
+  `;
+
+  return dispatchEmail({
+    to,
+    subject,
+    textContent,
+    htmlContent,
+    photographerName: userName,
+    businessName: "MemoryMakers Security",
+    type: "otp",
+  });
+}
+

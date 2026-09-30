@@ -3,8 +3,8 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase/client";
 import {
   updatePhotographerStatusInSupabase,
   fetchAllPhotographersFromSupabase,
+  fetchUserByEmailFromSupabase,
 } from "@/lib/supabase/service";
-import { getServerUsers, saveServerUser } from "@/lib/serverUserStore";
 import { sendPhotographerApprovalEmail } from "@/lib/mailer";
 
 export async function POST(req: NextRequest) {
@@ -33,23 +33,22 @@ export async function POST(req: NextRequest) {
         .eq("id", photographerId);
     }
 
-    // 3. Update status in Supabase public.users and users.json
+    // 3. Update status in Supabase public.users directly
     const emailToMatch = targetPhotographer?.email?.toLowerCase().trim();
-    if (emailToMatch) {
-      if (isSupabaseConfigured()) {
-        await supabase
-          .from("users")
-          .update({ status: "active" })
-          .ilike("email", emailToMatch);
-      }
-
-      // Update in server user store
-      const serverUsers = getServerUsers();
-      const userRecord = serverUsers.find((u) => u.email.toLowerCase() === emailToMatch);
-      if (userRecord) {
-        saveServerUser({
-          ...userRecord,
-          status: "active",
+    if (emailToMatch && isSupabaseConfigured()) {
+      const existingUser = await fetchUserByEmailFromSupabase(emailToMatch);
+      if (existingUser) {
+        await supabase.rpc("create_or_update_user", {
+          p_id: existingUser.id,
+          p_name: existingUser.name || targetPhotographer?.name || "Member",
+          p_email: emailToMatch,
+          p_phone: existingUser.phone || targetPhotographer?.phone || "",
+          p_role: "photographer",
+          p_status: "active",
+          p_city: existingUser.city || targetPhotographer?.city || "Amritsar",
+          p_state: existingUser.state || targetPhotographer?.state || "Punjab",
+          p_joined_date: existingUser.joinedDate || "Recent",
+          p_password_hash: existingUser.passwordHash || "",
         });
       }
     }

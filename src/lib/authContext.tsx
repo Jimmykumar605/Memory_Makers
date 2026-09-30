@@ -38,6 +38,7 @@ interface AuthContextType {
   signup: (payload: SignupPayload) => Promise<AuthResponse>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  updateUserSession: (updatedFields: Partial<UserAccount>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -182,6 +183,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateUserSession = (updatedFields: Partial<UserAccount>) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const updated = { ...prev, ...updatedFields };
+      if (typeof window !== "undefined") {
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
+        window.dispatchEvent(new Event("mm_auth_changed"));
+      }
+      return updated;
+    });
+  };
+
   const isAuthenticated = Boolean(user && user.status === "active");
   const role = user?.role || null;
 
@@ -196,6 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signup,
         logout,
         refreshUser,
+        updateUserSession,
       }}
     >
       {children}
