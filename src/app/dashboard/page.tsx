@@ -570,38 +570,8 @@ export default function PhotographerDashboardPage() {
   const handleSaveProfile = async () => {
     if (!activePhotographerId) return;
 
-    const trimmedEmail = email.trim();
-
-    // If photographer changed their email, safely update login email in user account & DB
-    if (user?.email && trimmedEmail && trimmedEmail.toLowerCase() !== user.email.toLowerCase()) {
-      try {
-        const updateRes = await fetch("/api/auth/update-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            oldEmail: user.email,
-            newEmail: trimmedEmail,
-            photographerId: activePhotographerId,
-            role: "photographer",
-          }),
-        });
-
-        const updateData = await updateRes.json();
-        if (!updateRes.ok || updateData.error) {
-          triggerSaveToast(updateData.error || "Failed to update email address. Email might be in use.");
-          return;
-        }
-
-        // Update active session in authContext & localStorage immediately
-        updateUserSession({ email: trimmedEmail });
-        if (typeof window !== "undefined") {
-          localStorage.setItem("mm_active_photographer_id", activePhotographerId);
-        }
-      } catch {
-        triggerSaveToast("Network error updating email address. Please try again.");
-        return;
-      }
-    }
+    // Email is read-only and permanent
+    const permanentEmail = user?.email || email;
 
     const updates = {
       name: artistName,
@@ -611,7 +581,7 @@ export default function PhotographerDashboardPage() {
       city,
       state: stateRegion,
       phone: phone.trim(),
-      email: trimmedEmail,
+      email: permanentEmail,
       gender,
       experienceYears: Number(experienceYears) || 0,
       startingPrice,
@@ -631,7 +601,7 @@ export default function PhotographerDashboardPage() {
 
     updatePhotographerStudio(activePhotographerId, updates);
     await updatePhotographerStudioInSupabase(activePhotographerId, updates);
-    triggerSaveToast("Studio profile changes saved! Login email updated successfully.");
+    triggerSaveToast("Studio profile changes saved successfully!");
   };
 
   const handleUpdateInquiryStatus = async (id: string, status: "accepted" | "declined") => {
@@ -1127,16 +1097,32 @@ export default function PhotographerDashboardPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
-                  Official Studio Email
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="studio@example.com"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 font-mono"
-                />
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-mono uppercase text-zinc-400">
+                    Official Studio Email
+                  </label>
+                  <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider flex items-center gap-1">
+                    <Lock className="w-2.5 h-2.5 text-zinc-500" /> Read Only
+                  </span>
+                </div>
+                <div className="relative">
+                  <input
+                    type="email"
+                    value={email}
+                    readOnly
+                    disabled
+                    tabIndex={-1}
+                    placeholder="studio@example.com"
+                    className="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-white/[0.02] border border-white/10 text-sm text-zinc-400 font-mono cursor-not-allowed select-none opacity-80 focus:outline-none"
+                    title="Account email address cannot be changed"
+                  />
+                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
+                    <Lock className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <p className="text-[10px] text-zinc-500 mt-1">
+                  Login ID and registered email are permanent and cannot be modified.
+                </p>
               </div>
             </div>
 
