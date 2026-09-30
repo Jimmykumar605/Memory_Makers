@@ -36,7 +36,7 @@ interface AuthContextType {
   role: UserRole | null;
   login: (email: string, password: string, preferredRole?: "photographer" | "client") => Promise<AuthResponse>;
   signup: (payload: SignupPayload) => Promise<AuthResponse>;
-  logout: () => Promise<void>;
+  logout: (redirectTo?: string | null) => Promise<void>;
   refreshUser: () => Promise<void>;
   updateUserSession: (updatedFields: Partial<UserAccount>) => void;
 }
@@ -168,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = async () => {
+  const logout = async (redirectTo: string | null = "/photographers") => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch {
@@ -177,8 +177,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       if (typeof window !== "undefined") {
         localStorage.removeItem(AUTH_STORAGE_KEY);
+        localStorage.removeItem("mm_active_photographer_id");
+        localStorage.removeItem("memorymakers_active_session_v1");
+        sessionStorage.clear();
         clearAdminSession();
         window.dispatchEvent(new Event("mm_auth_changed"));
+
+        if (redirectTo) {
+          window.location.href = redirectTo;
+        }
       }
     }
   };

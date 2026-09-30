@@ -109,7 +109,7 @@ export default function Navbar() {
 
                 <button
                   type="button"
-                  onClick={() => logout()}
+                  onClick={() => logout("/photographers")}
                   className="px-3 py-2 rounded-xl bg-white/[0.04] hover:bg-rose-500/10 border border-white/10 hover:border-rose-500/30 text-xs font-semibold text-zinc-300 hover:text-rose-300 transition-all flex items-center gap-1.5 cursor-pointer"
                   title="Sign out of account"
                 >
@@ -215,8 +215,8 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => {
-                    logout();
                     setMobileMenuOpen(false);
+                    logout("/photographers");
                   }}
                   className="w-full flex items-center justify-center py-2.5 rounded-xl bg-rose-500/10 text-rose-300 text-xs font-semibold border border-rose-500/20"
                 >

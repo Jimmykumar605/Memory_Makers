@@ -65,13 +65,26 @@ import { useAuth } from "@/lib/authContext";
 
 export default function PhotographerDashboardPage() {
   const router = useRouter();
-  const { user, logout, refreshUser, updateUserSession } = useAuth();
+  const { user, logout, refreshUser, updateUserSession, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    if (user?.role === "admin") {
-      router.replace("/admin");
+    if (authLoading) return;
+
+    if (!user) {
+      router.replace("/photographers");
+      return;
     }
-  }, [user?.role, router]);
+
+    if (user.role === "admin") {
+      router.replace("/admin");
+      return;
+    }
+
+    if (user.role === "client") {
+      router.replace("/photographers");
+      return;
+    }
+  }, [user, authLoading, router]);
 
   const [activeTab, setActiveTab] = useState<"profile" | "portfolio" | "packages" | "inquiries" | "gear">("profile");
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -197,6 +210,12 @@ export default function PhotographerDashboardPage() {
     let isMounted = true;
 
     async function loadStudioProfile() {
+      if (authLoading) return;
+      if (!user) {
+        if (isMounted) setIsLoadingProfile(false);
+        return;
+      }
+
       setIsLoadingProfile(true);
       try {
         // Query live from Supabase PostgreSQL
@@ -206,14 +225,8 @@ export default function PhotographerDashboardPage() {
         if (remote && remote.length > 0) {
           let matched: Photographer | undefined = undefined;
 
-          // 0. Try matching persistent photographer ID stored in localStorage or active state
-          const cachedPhotoId = typeof window !== "undefined" ? localStorage.getItem("mm_active_photographer_id") : null;
-          if (cachedPhotoId) {
-            matched = remote.find((p) => p.id === cachedPhotoId);
-          }
-
           // 1. Try matching logged in user's email
-          if (!matched && user?.email) {
+          if (user?.email) {
             matched = remote.find((p) => p.email?.toLowerCase() === user.email.toLowerCase());
           }
           // 2. Try matching user ID
@@ -269,15 +282,6 @@ export default function PhotographerDashboardPage() {
               reviews: [],
             });
             return;
-          }
-
-          // Fallback for public preview or admin inspection: first active studio in database
-          applyProfile(remote[0]);
-        } else {
-          // If Supabase returned empty, check local store
-          const stored = getStoredPhotographers();
-          if (stored.length > 0) {
-            applyProfile(stored[0]);
           }
         }
       } catch (err) {
@@ -637,10 +641,10 @@ export default function PhotographerDashboardPage() {
     await updateInquiryStatusInSupabase(id, status);
   };
 
-  if (isLoadingProfile) {
+  if (authLoading || isLoadingProfile || !user || user.role !== "photographer") {
     return (
       <div className="min-h-screen bg-[#040507] text-zinc-100 py-20 px-4 flex flex-col items-center justify-center">
-        <LogoLoader size="lg" message="Loading your dynamic studio dashboard..." />
+        <LogoLoader size="lg" message="Authenticating studio workspace..." />
       </div>
     );
   }
@@ -737,8 +741,7 @@ export default function PhotographerDashboardPage() {
               <button
                 type="button"
                 onClick={async () => {
-                  await logout();
-                  router.push("/login");
+                  await logout("/photographers");
                 }}
                 className="py-2.5 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
               >
@@ -769,8 +772,7 @@ export default function PhotographerDashboardPage() {
           <button
             type="button"
             onClick={async () => {
-              await logout();
-              router.push("/login");
+              await logout("/photographers");
             }}
             className="w-full py-2.5 px-4 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold cursor-pointer"
           >
@@ -840,6 +842,15 @@ export default function PhotographerDashboardPage() {
               className="px-5 py-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-black font-semibold text-xs uppercase tracking-wider transition-colors shadow-lg shadow-emerald-500/20 hover:scale-105 cursor-pointer"
             >
               Save Profile
+            </button>
+            <button
+              type="button"
+              onClick={() => logout("/photographers")}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 hover:text-rose-200 text-xs font-semibold transition-all cursor-pointer"
+              title="Sign out of creator studio"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Log Out</span>
             </button>
           </div>
         </div>

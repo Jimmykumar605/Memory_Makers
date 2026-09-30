@@ -282,7 +282,7 @@ export default function AdminPortalPage() {
   // Handle Logout
   const handleLogout = async () => {
     clearAdminSession();
-    await logout();
+    await logout(null);
     setIsAuthenticated(false);
     setEmailInput("");
     setPasswordInput("");
@@ -503,7 +503,7 @@ export default function AdminPortalPage() {
               <button
                 type="button"
                 onClick={async () => {
-                  await logout();
+                  await logout(null);
                   clearAdminSession();
                   setIsAuthenticated(false);
                   setEmailInput("");

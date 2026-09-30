@@ -337,7 +337,7 @@ function LoginContent() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => logout()}
+                    onClick={() => logout(null)}
                     className="w-full py-2.5 px-4 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
                   >
                     <LogOut className="w-3.5 h-3.5" />
@@ -373,7 +373,7 @@ function LoginContent() {
                   </Link>
                   <button
                     type="button"
-                    onClick={() => logout()}
+                    onClick={() => logout(null)}
                     className="w-full py-2.5 px-4 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
                   >
                     <LogOut className="w-3.5 h-3.5" />
