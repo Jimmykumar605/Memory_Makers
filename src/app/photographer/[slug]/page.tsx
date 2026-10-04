@@ -74,25 +74,38 @@ export default function PhotographerProfilePage() {
   const slug = (params?.slug as string) || "";
 
   const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [photographer, setPhotographer] = useState<Photographer | undefined>(() =>
     getSeedPhotographerBySlug(slug)
   );
 
   useEffect(() => {
     setMounted(true);
-    setPhotographer(getPhotographerBySlug(slug));
+    const local = getPhotographerBySlug(slug);
+    if (local) {
+      setPhotographer(local);
+      setLoading(false);
+    }
 
     // Live query single photographer from Supabase PostgreSQL DB
     if (slug) {
-      fetchPhotographerBySlugFromSupabase(slug).then((remote) => {
-        if (remote) {
-          setPhotographer(remote);
-        }
-      });
+      fetchPhotographerBySlugFromSupabase(slug)
+        .then((remote) => {
+          if (remote) {
+            setPhotographer(remote);
+          }
+          setLoading(false);
+        })
+        .catch(() => {
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
     }
 
     const handleUpdate = () => {
-      setPhotographer(getPhotographerBySlug(slug));
+      const updated = getPhotographerBySlug(slug);
+      if (updated) setPhotographer(updated);
     };
     window.addEventListener("mm_photographers_updated", handleUpdate);
     return () => window.removeEventListener("mm_photographers_updated", handleUpdate);
@@ -108,19 +121,21 @@ export default function PhotographerProfilePage() {
   const [isLiked, setIsLiked] = useState(false);
   const [copiedNotification, setCopiedNotification] = useState(false);
 
-  if (!photographer) {
-    if (!mounted) {
-      return (
-        <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 text-center">
-          <LogoLoader size="md" message="Locating artist profile..." />
-        </div>
-      );
-    }
-
+  if (loading || !mounted) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 text-center">
         <LogoLoader size="md" message="Locating artist profile..." />
-        <h2 className="text-xl font-bold text-white mt-6">Photographer Profile Not Found</h2>
+      </div>
+    );
+  }
+
+  if (!photographer) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-400 mx-auto mb-4">
+          <AlertTriangle className="w-7 h-7" />
+        </div>
+        <h2 className="text-xl font-bold text-white">Photographer Profile Not Found</h2>
         <p className="text-zinc-400 text-sm mt-2 max-w-md">
           The requested visual artisan profile could not be found or has moved to a new studio URL.
         </p>
@@ -272,8 +287,8 @@ export default function PhotographerProfilePage() {
                 <button
                   onClick={() => setIsLiked(!isLiked)}
                   className={`p-3 rounded-xl border transition-all ${isLiked
-                      ? "bg-rose-500/20 border-rose-500/40 text-rose-400"
-                      : "bg-white/[0.04] border-white/10 text-zinc-300 hover:text-white"
+                    ? "bg-rose-500/20 border-rose-500/40 text-rose-400"
+                    : "bg-white/[0.04] border-white/10 text-zinc-300 hover:text-white"
                     }`}
                   aria-label="Wishlist"
                 >
@@ -467,8 +482,8 @@ export default function PhotographerProfilePage() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={`pb-4 px-3 text-sm font-medium transition-all relative whitespace-nowrap ${activeTab === tab.id
-                  ? "text-emerald-400 font-semibold"
-                  : "text-zinc-400 hover:text-zinc-200"
+                ? "text-emerald-400 font-semibold"
+                : "text-zinc-400 hover:text-zinc-200"
                 }`}
             >
               {tab.label}
@@ -493,8 +508,8 @@ export default function PhotographerProfilePage() {
                     key={occ}
                     onClick={() => setPortfolioOccasion(occ)}
                     className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${portfolioOccasion === occ
-                        ? "bg-emerald-400 text-black font-semibold shadow-md shadow-emerald-400/20"
-                        : "bg-white/[0.04] text-zinc-300 hover:text-white border border-white/10 hover:border-emerald-400/30"
+                      ? "bg-emerald-400 text-black font-semibold shadow-md shadow-emerald-400/20"
+                      : "bg-white/[0.04] text-zinc-300 hover:text-white border border-white/10 hover:border-emerald-400/30"
                       }`}
                   >
                     {occ}
@@ -561,8 +576,8 @@ export default function PhotographerProfilePage() {
                 <div
                   key={pkg.id}
                   className={`p-6 sm:p-8 rounded-2xl glass-panel border flex flex-col justify-between relative ${pkg.isPopular
-                      ? "border-emerald-400/50 bg-emerald-500/[0.04] shadow-xl shadow-emerald-500/10"
-                      : "border-white/10"
+                    ? "border-emerald-400/50 bg-emerald-500/[0.04] shadow-xl shadow-emerald-500/10"
+                    : "border-white/10"
                     }`}
                 >
                   {pkg.isPopular && (
@@ -602,8 +617,8 @@ export default function PhotographerProfilePage() {
                     <button
                       onClick={() => setIsBookingOpen(true)}
                       className={`w-full py-3 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all ${pkg.isPopular
-                          ? "bg-emerald-400 hover:bg-emerald-300 text-black shadow-lg shadow-emerald-500/20 hover:scale-[1.02]"
-                          : "bg-white/[0.06] hover:bg-emerald-500/15 hover:border-emerald-400/40 text-white border border-white/15"
+                        ? "bg-emerald-400 hover:bg-emerald-300 text-black shadow-lg shadow-emerald-500/20 hover:scale-[1.02]"
+                        : "bg-white/[0.06] hover:bg-emerald-500/15 hover:border-emerald-400/40 text-white border border-white/15"
                         }`}
                     >
                       Select & Reserve Dates

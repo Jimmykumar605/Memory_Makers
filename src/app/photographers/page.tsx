@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Search, Filter, SlidersHorizontal, Sparkles, MapPin, X, IndianRupee } from "lucide-react";
 import PhotographerCard from "@/components/PhotographerCard";
 import BookingModal from "@/components/BookingModal";
+import LogoLoader from "@/components/LogoLoader";
 import { OCCASIONS, PRIMARY_REGIONS, ALL_INDIAN_STATES } from "@/lib/data";
 import { Photographer, OccasionType } from "@/lib/types";
 import { getPublicPhotographers, getSeedPublicPhotographers, savePhotographers } from "@/lib/photographerStore";
@@ -18,17 +19,27 @@ function PhotographersDirectoryContent() {
 
   // Dynamic photographers list loaded from DB
   const [photographersList, setPhotographersList] = useState<Photographer[]>(getSeedPublicPhotographers);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setPhotographersList(getPublicPhotographers());
+    const cached = getPublicPhotographers();
+    if (cached && cached.length > 0) {
+      setPhotographersList(cached);
+      setLoading(false);
+    }
 
     // Live query straight from Supabase PostgreSQL DB
-    fetchAllPhotographersFromSupabase().then((remote) => {
-      if (remote && remote.length > 0) {
-        savePhotographers(remote);
-        setPhotographersList(remote.filter((p) => p.status === "approved" || !p.status));
-      }
-    });
+    fetchAllPhotographersFromSupabase()
+      .then((remote) => {
+        if (remote && remote.length > 0) {
+          savePhotographers(remote);
+          setPhotographersList(remote.filter((p) => p.status === "approved" || !p.status));
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
 
     const handleUpdate = () => {
       setPhotographersList(getPublicPhotographers());
@@ -299,7 +310,11 @@ function PhotographersDirectoryContent() {
         </div>
 
         {/* Photographers Grid */}
-        {filteredPhotographers.length > 0 ? (
+        {loading && filteredPhotographers.length === 0 ? (
+          <div className="py-24 text-center glass-panel rounded-2xl border border-white/10 p-8 space-y-4">
+            <LogoLoader size="md" message="Discovering verified visual artisans..." />
+          </div>
+        ) : filteredPhotographers.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredPhotographers.map((photographer) => (
               <PhotographerCard

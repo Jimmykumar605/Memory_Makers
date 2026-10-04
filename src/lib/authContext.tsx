@@ -51,24 +51,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
+      let activeEmail = "";
+      let activeRole = "";
+
       // 1. Try reading cached user session from localStorage
       if (typeof window !== "undefined") {
         const cached = localStorage.getItem(AUTH_STORAGE_KEY);
         if (cached) {
-          const parsed = JSON.parse(cached);
-          setUser(parsed);
+          try {
+            const parsed = JSON.parse(cached);
+            if (parsed) {
+              setUser(parsed);
+              activeEmail = parsed.email || "";
+              activeRole = parsed.role || "";
+            }
+          } catch {
+            // ignore
+          }
         }
       }
 
       // 2. Query dynamic user session from API
-      const res = await fetch("/api/auth/me", {
-        headers: user?.email
-          ? {
-              "x-user-email": user.email,
-              "x-user-role": user.role || "",
-            }
-          : {},
-      });
+      const headers: Record<string, string> = {};
+      if (activeEmail) {
+        headers["x-user-email"] = activeEmail;
+        headers["x-user-role"] = activeRole;
+      }
+
+      const res = await fetch("/api/auth/me", { headers });
       const data = await res.json();
       if (data?.user) {
         setUser(data.user);
@@ -81,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [user?.email]);
+  }, []);
 
   useEffect(() => {
     refreshUser();

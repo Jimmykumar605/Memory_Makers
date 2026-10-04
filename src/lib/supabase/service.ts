@@ -74,16 +74,16 @@ interface ReviewRow {
   date: string;
 }
 
-// Map a Database Profile row with joined relations to application Photographer interface
-function mapRowToPhotographer(row: ProfileRow): Photographer {
+// Map a Database Profile row merged with its User Account to application Photographer interface
+function mapRowToPhotographer(row: ProfileRow, user?: UserAccount | UserRow | null): Photographer {
   return {
     id: row.id,
-    name: row.name,
-    businessName: row.business_name,
+    name: user?.name || row.name || "Artisan Creator",
+    businessName: row.business_name || row.name || "Studio",
     slug: row.slug,
-    email: row.email,
-    phone: row.phone,
-    gender: row.gender || "male",
+    email: user?.email || row.email,
+    phone: user?.phone || row.phone,
+    gender: user?.gender || row.gender || "male",
     status: row.status,
     appliedDate: row.applied_date,
     avatarUrl: row.avatar_url,
@@ -149,35 +149,51 @@ function mapRowToPhotographer(row: ProfileRow): Photographer {
   };
 }
 
-// 1. Fetch all photographers (approved + pending for admin)
+// 1. Fetch all photographers (approved + pending for admin) with 1:1 user identity joined
 export async function fetchAllPhotographersFromSupabase(): Promise<Photographer[] | null> {
   if (!isSupabaseConfigured()) return null;
 
   try {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select(`
-        *,
-        packages (*),
-        portfolios (*),
-        reviews (*)
-      `)
-      .order("created_at", { ascending: false });
+    const [profilesRes, usersRes] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select(`
+          *,
+          packages (*),
+          portfolios (*),
+          reviews (*)
+        `)
+        .order("created_at", { ascending: false }),
+      fetchUsersFromSupabase().catch(() => null),
+    ]);
 
-    if (error) {
-      console.warn("Supabase fetchAllPhotographers error:", error.message);
+    if (profilesRes.error) {
+      console.warn("Supabase fetchAllPhotographers error:", profilesRes.error.message);
       return null;
     }
 
-    if (!data) return null;
-    return (data as ProfileRow[]).map(mapRowToPhotographer);
+    if (!profilesRes.data) return null;
+
+    // Index users by ID and Email for instant 1:1 lookup
+    const usersMap = new Map<string, UserAccount>();
+    if (usersRes && Array.isArray(usersRes)) {
+      usersRes.forEach((u) => {
+        if (u.id) usersMap.set(u.id, u);
+        if (u.email) usersMap.set(u.email.toLowerCase(), u);
+      });
+    }
+
+    return (profilesRes.data as ProfileRow[]).map((row) => {
+      const matchedUser = usersMap.get(row.id) || (row.email ? usersMap.get(row.email.toLowerCase()) : null);
+      return mapRowToPhotographer(row, matchedUser);
+    });
   } catch (err) {
     console.warn("Supabase fetchAllPhotographers exception:", err);
     return null;
   }
 }
 
-// 2. Fetch single photographer by slug
+// 2. Fetch single photographer by slug with 1:1 user identity joined
 export async function fetchPhotographerBySlugFromSupabase(slug: string): Promise<Photographer | null> {
   if (!isSupabaseConfigured()) return null;
 
@@ -194,7 +210,23 @@ export async function fetchPhotographerBySlugFromSupabase(slug: string): Promise
       .maybeSingle();
 
     if (error || !data) return null;
-    return mapRowToPhotographer(data as ProfileRow);
+
+    const row = data as ProfileRow;
+    let matchedUser: UserAccount | null = null;
+    if (row.id || row.email) {
+      try {
+        const { data: rpcUser } = await supabase.rpc("get_user_by_email", {
+          p_email: row.email || "",
+        });
+        if (rpcUser) {
+          matchedUser = mapRowToUser(rpcUser as UserRow);
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    return mapRowToPhotographer(row, matchedUser);
   } catch (err) {
     console.warn("Supabase fetchPhotographerBySlug exception:", err);
     return null;
@@ -302,11 +334,13 @@ export async function submitInquiryToSupabase(
   }
 }
 
-// 6. Delete photographer from Supabase
+// 6. Delete photographer from Supabase (cascades to user account)
 export async function deletePhotographerFromSupabase(id: string): Promise<boolean> {
   if (!isSupabaseConfigured()) return false;
   try {
     const { error } = await supabase.from("profiles").delete().eq("id", id);
+    // Delete corresponding user account with matching ID
+    await supabase.from("users").delete().eq("id", id);
     return !error;
   } catch {
     return false;
@@ -442,6 +476,30 @@ export async function updatePhotographerStudioInSupabase(
       }
     }
 
+    // 1:1 Relational Sync: If personal account identity details changed, update master users table
+    if (updates.name !== undefined || updates.phone !== undefined || updates.gender !== undefined) {
+      try {
+        const allUsers = await fetchUsersFromSupabase();
+        const currentUser = allUsers?.find((u) => u.id === id) || (updates.email ? await fetchUserByEmailFromSupabase(updates.email) : null);
+        if (currentUser) {
+          await supabase.rpc("create_or_update_user", {
+            p_id: currentUser.id || id,
+            p_name: updates.name !== undefined ? updates.name : currentUser.name,
+            p_email: currentUser.email,
+            p_phone: updates.phone !== undefined ? updates.phone : (currentUser.phone || ""),
+            p_role: "photographer",
+            p_status: currentUser.status,
+            p_city: updates.city !== undefined ? updates.city : currentUser.city,
+            p_state: updates.state !== undefined ? updates.state : currentUser.state,
+            p_joined_date: currentUser.joinedDate || "Recent",
+            p_password_hash: currentUser.passwordHash || "",
+          });
+        }
+      } catch {
+        // ignore
+      }
+    }
+
     // Sync portfolio items to public.portfolios if provided
     if (updates.portfolio !== undefined) {
       await supabase.from("portfolios").delete().eq("photographer_id", id);
@@ -541,38 +599,97 @@ function mapRowToUser(row: UserRow): UserAccount {
   };
 }
 
-// 10. Fetch all registered users from Supabase DB
 export async function fetchUsersFromSupabase(): Promise<UserAccount[] | null> {
   if (!isSupabaseConfigured()) return null;
+
+  const usersMap = new Map<string, UserAccount>();
 
   // 1. Try get_all_users RPC (bypasses RLS)
   try {
     const { data: rpcData, error: rpcError } = await supabase.rpc("get_all_users");
     if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
-      return (rpcData as UserRow[]).map(mapRowToUser);
+      (rpcData as UserRow[]).forEach((row) => {
+        const u = mapRowToUser(row);
+        usersMap.set(u.email.toLowerCase(), u);
+      });
     }
   } catch {
     // Fallback to table select
   }
 
+  // 2. Direct table select fallback
   try {
     const { data, error } = await supabase
       .from("users")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (error || !data) return null;
-    return (data as UserRow[]).map(mapRowToUser);
+    if (!error && data && data.length > 0) {
+      (data as UserRow[]).forEach((row) => {
+        const u = mapRowToUser(row);
+        if (!usersMap.has(u.email.toLowerCase())) {
+          usersMap.set(u.email.toLowerCase(), u);
+        }
+      });
+    }
   } catch {
-    return null;
+    // ignore
   }
+
+  // 3. Ensure Master Admin is present if RLS hid it from direct select
+  const hasAdmin = Array.from(usersMap.values()).some((u) => u.role === "admin");
+  if (!hasAdmin) {
+    try {
+      const adminUser = await fetchUserByEmailFromSupabase("admin@memorymakers.com");
+      if (adminUser) {
+        usersMap.set(adminUser.email.toLowerCase(), adminUser);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // 4. Also reconcile registered photographers from profiles table as user accounts
+  try {
+    const photographers = await fetchAllPhotographersFromSupabase();
+    if (photographers && photographers.length > 0) {
+      for (const p of photographers) {
+        if (!p.email) continue;
+        const normEmail = p.email.toLowerCase();
+        if (!usersMap.has(normEmail)) {
+          usersMap.set(normEmail, {
+            id: p.id,
+            name: p.name,
+            email: normEmail,
+            phone: p.phone,
+            gender: p.gender || "male",
+            role: "photographer",
+            status: p.status === "approved" ? "active" : "pending",
+            city: p.city,
+            state: p.state,
+            joinedDate: p.appliedDate || "Recent",
+            photographerStatus: p.status,
+            businessName: p.businessName,
+          });
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  const list = Array.from(usersMap.values());
+  return list.length > 0 ? list : null;
 }
 
-// 11. Delete a user account from Supabase DB
+// 11. Delete a user account from Supabase DB (cascades to studio profile)
 export async function deleteUserFromSupabase(userId: string): Promise<boolean> {
   if (!isSupabaseConfigured()) return false;
 
   try {
+    // 1. Delete associated studio profile if photographer
+    await supabase.from("profiles").delete().eq("id", userId);
+    // 2. Delete user account
     const { error } = await supabase.from("users").delete().eq("id", userId);
     return !error;
   } catch {

@@ -137,6 +137,7 @@ export async function POST(req: NextRequest) {
         .replace(/(^-|-$)/g, "");
 
       photographerProfile = await registerPhotographerInSupabase({
+        id: createdUser.id, // Direct 1:1 link to users table ID
         name,
         businessName: biz,
         slug: `${rawSlug}-${Date.now().toString().slice(-4)}`,
