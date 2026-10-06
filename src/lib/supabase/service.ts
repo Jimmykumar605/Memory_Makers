@@ -149,51 +149,36 @@ function mapRowToPhotographer(row: ProfileRow, user?: UserAccount | UserRow | nu
   };
 }
 
-// 1. Fetch all photographers (approved + pending for admin) with 1:1 user identity joined
+// 1. Fetch all photographers directly from profiles table
 export async function fetchAllPhotographersFromSupabase(): Promise<Photographer[] | null> {
   if (!isSupabaseConfigured()) return null;
 
   try {
-    const [profilesRes, usersRes] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select(`
-          *,
-          packages (*),
-          portfolios (*),
-          reviews (*)
-        `)
-        .order("created_at", { ascending: false }),
-      fetchUsersFromSupabase().catch(() => null),
-    ]);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(`
+        *,
+        packages (*),
+        portfolios (*),
+        reviews (*)
+      `)
+      .order("created_at", { ascending: false });
 
-    if (profilesRes.error) {
-      console.warn("Supabase fetchAllPhotographers error:", profilesRes.error.message);
+    if (error) {
+      console.warn("Supabase fetchAllPhotographers error:", error.message);
       return null;
     }
 
-    if (!profilesRes.data) return null;
+    if (!data) return null;
 
-    // Index users by ID and Email for instant 1:1 lookup
-    const usersMap = new Map<string, UserAccount>();
-    if (usersRes && Array.isArray(usersRes)) {
-      usersRes.forEach((u) => {
-        if (u.id) usersMap.set(u.id, u);
-        if (u.email) usersMap.set(u.email.toLowerCase(), u);
-      });
-    }
-
-    return (profilesRes.data as ProfileRow[]).map((row) => {
-      const matchedUser = usersMap.get(row.id) || (row.email ? usersMap.get(row.email.toLowerCase()) : null);
-      return mapRowToPhotographer(row, matchedUser);
-    });
+    return (data as ProfileRow[]).map((row) => mapRowToPhotographer(row));
   } catch (err) {
     console.warn("Supabase fetchAllPhotographers exception:", err);
     return null;
   }
 }
 
-// 2. Fetch single photographer by slug with 1:1 user identity joined
+// 2. Fetch single photographer by slug directly from profiles table
 export async function fetchPhotographerBySlugFromSupabase(slug: string): Promise<Photographer | null> {
   if (!isSupabaseConfigured()) return null;
 
@@ -211,22 +196,7 @@ export async function fetchPhotographerBySlugFromSupabase(slug: string): Promise
 
     if (error || !data) return null;
 
-    const row = data as ProfileRow;
-    let matchedUser: UserAccount | null = null;
-    if (row.id || row.email) {
-      try {
-        const { data: rpcUser } = await supabase.rpc("get_user_by_email", {
-          p_email: row.email || "",
-        });
-        if (rpcUser) {
-          matchedUser = mapRowToUser(rpcUser as UserRow);
-        }
-      } catch {
-        // ignore
-      }
-    }
-
-    return mapRowToPhotographer(row, matchedUser);
+    return mapRowToPhotographer(data as ProfileRow);
   } catch (err) {
     console.warn("Supabase fetchPhotographerBySlug exception:", err);
     return null;
@@ -604,20 +574,7 @@ export async function fetchUsersFromSupabase(): Promise<UserAccount[] | null> {
 
   const usersMap = new Map<string, UserAccount>();
 
-  // 1. Try get_all_users RPC (bypasses RLS)
-  try {
-    const { data: rpcData, error: rpcError } = await supabase.rpc("get_all_users");
-    if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
-      (rpcData as UserRow[]).forEach((row) => {
-        const u = mapRowToUser(row);
-        usersMap.set(u.email.toLowerCase(), u);
-      });
-    }
-  } catch {
-    // Fallback to table select
-  }
-
-  // 2. Direct table select fallback
+  // Direct table select (standard Supabase PostgREST query on users table)
   try {
     const { data, error } = await supabase
       .from("users")
@@ -729,17 +686,6 @@ export async function verifyAdminFromSupabase(email: string): Promise<UserAccoun
 export async function fetchMasterAdminFromSupabase(): Promise<UserAccount | null> {
   if (!isSupabaseConfigured()) return null;
 
-  // 1. Try get_all_users RPC
-  try {
-    const { data: rpcData, error: rpcError } = await supabase.rpc("get_all_users");
-    if (!rpcError && Array.isArray(rpcData)) {
-      const admin = rpcData.find((u: any) => u.role === "admin");
-      if (admin) return mapRowToUser(admin as UserRow);
-    }
-  } catch {
-    // Fallback to table query
-  }
-
   try {
     const { data, error } = await supabase
       .from("users")
@@ -747,11 +693,19 @@ export async function fetchMasterAdminFromSupabase(): Promise<UserAccount | null
       .eq("role", "admin")
       .maybeSingle();
 
-    if (error || !data) return null;
-    return mapRowToUser(data as UserRow);
+    if (!error && data) return mapRowToUser(data as UserRow);
   } catch {
-    return null;
+    // ignore
   }
+
+  try {
+    const adminByEmail = await fetchUserByEmailFromSupabase("admin@memorymakers.com");
+    if (adminByEmail && adminByEmail.role === "admin") return adminByEmail;
+  } catch {
+    // ignore
+  }
+
+  return null;
 }
 
 // 15. Fetch user by email from Supabase DB
@@ -759,30 +713,19 @@ export async function fetchUserByEmailFromSupabase(email: string): Promise<UserA
   if (!isSupabaseConfigured()) return null;
   const normEmail = email.trim().toLowerCase();
 
-  // 1. Try get_user_by_email RPC (bypasses RLS)
-  try {
-    const { data: rpcData, error: rpcError } = await supabase.rpc("get_user_by_email", {
-      p_email: normEmail,
-    });
-    if (!rpcError && rpcData) {
-      return mapRowToUser(rpcData as UserRow);
-    }
-  } catch {
-    // Fallback to table query
-  }
-
   try {
     const { data, error } = await supabase
       .from("users")
       .select("*")
-      .eq("email", normEmail)
+      .ilike("email", normEmail)
       .maybeSingle();
 
-    if (error || !data) return null;
-    return mapRowToUser(data as UserRow);
+    if (!error && data) return mapRowToUser(data as UserRow);
   } catch {
-    return null;
+    // ignore
   }
+
+  return null;
 }
 
 // 16. Create or register user account in Supabase DB
