@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import NavigationProgress from "@/components/NavigationProgress";
 import { AuthProvider } from "@/lib/authContext";
+import { ThemeProvider } from "@/lib/themeContext";
 
 const playfair = Playfair_Display({
   variable: "--font-serif",
@@ -51,16 +52,39 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${playfair.variable} ${jakarta.variable} h-full antialiased dark`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-[#050607] text-zinc-100 selection:bg-emerald-400 selection:text-black">
-        <AuthProvider>
-          <Suspense fallback={null}>
-            <NavigationProgress />
-          </Suspense>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </AuthProvider>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var t = localStorage.getItem('memorymakers_theme');
+                if (t === 'light' || (!t && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+                  document.documentElement.classList.remove('dark');
+                  document.documentElement.classList.add('light');
+                  document.documentElement.setAttribute('data-theme', 'light');
+                } else {
+                  document.documentElement.classList.remove('light');
+                  document.documentElement.classList.add('dark');
+                  document.documentElement.setAttribute('data-theme', 'dark');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-full flex flex-col bg-[#050607] text-zinc-100 selection:bg-emerald-400 selection:text-black transition-colors duration-200">
+        <ThemeProvider>
+          <AuthProvider>
+            <Suspense fallback={null}>
+              <NavigationProgress />
+            </Suspense>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

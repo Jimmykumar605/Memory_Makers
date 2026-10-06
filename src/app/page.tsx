@@ -464,7 +464,7 @@ export default function Home() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
-              <div className="absolute bottom-3 left-3 right-3 flex flex-col justify-end text-left">
+              <div className="absolute bottom-3 left-3 right-3 flex flex-col justify-end text-left photo-overlay-content">
                 <span className="text-[10px] uppercase font-mono tracking-wider text-emerald-400 font-semibold">
                   {photo.occasion}
                 </span>

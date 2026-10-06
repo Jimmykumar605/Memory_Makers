@@ -25,7 +25,7 @@ export default function PhotographerCard({ photographer, onQuickInquire }: Photo
   return (
     <div className="group relative rounded-2xl glass-panel border border-white/[0.08] hover:border-emerald-400/50 transition-all duration-500 overflow-hidden flex flex-col justify-between hover:shadow-2xl hover:shadow-emerald-500/15">
       {/* Top Image Preview Carousel */}
-      <div className="relative w-full h-64 overflow-hidden bg-black/50">
+      <div className="relative w-full h-64 overflow-hidden bg-black/50 photo-overlay-content">
         <LazyImage
           src={previewImages[activeImageIdx] || photographer.coverImageUrl}
           alt={photographer.businessName}

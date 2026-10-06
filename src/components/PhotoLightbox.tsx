@@ -63,7 +63,7 @@ export default function PhotoLightbox({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-2xl animate-in fade-in duration-200 p-3 sm:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-2xl animate-in fade-in duration-200 p-3 sm:p-6 photo-overlay-content"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();

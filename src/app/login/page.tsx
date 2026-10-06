@@ -11,10 +11,13 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryRole = searchParams.get("role");
+  const queryMode = searchParams.get("mode");
 
   const { login, signup, user: activeUser, logout, refreshUser } = useAuth();
 
-  const [isSignUp, setIsSignUp] = useState(queryRole === "photographer");
+  const [isSignUp, setIsSignUp] = useState(
+    queryRole === "photographer" || queryMode === "signup"
+  );
   const [role, setRole] = useState<"photographer" | "client">(
     queryRole === "client" ? "client" : "photographer"
   );
@@ -61,11 +64,19 @@ function LoginContent() {
   }, [resendCooldown]);
 
   useEffect(() => {
-    if (queryRole === "photographer") {
+    if (queryRole === "photographer" || queryMode === "signup") {
       setRole("photographer");
       setIsSignUp(true);
+      setIsForgotPassword(false);
+      setErrorMsg("");
+      setLoginSuccessMsg("");
+    } else if (queryMode === "signin" || (!queryRole && !queryMode)) {
+      setIsSignUp(false);
+      setIsForgotPassword(false);
+      setErrorMsg("");
+      setLoginSuccessMsg("");
     }
-  }, [queryRole]);
+  }, [queryRole, queryMode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1032,8 +1043,18 @@ function LoginContent() {
           <div className="text-center pt-2">
             <button
               type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-xs text-zinc-400 hover:text-emerald-400 transition-colors"
+              onClick={() => {
+                const nextSignUp = !isSignUp;
+                setIsSignUp(nextSignUp);
+                setIsForgotPassword(false);
+                setErrorMsg("");
+                setLoginSuccessMsg("");
+                router.replace(
+                  nextSignUp ? "/login?role=photographer" : "/login?mode=signin",
+                  { scroll: false }
+                );
+              }}
+              className="text-xs text-zinc-400 hover:text-emerald-400 transition-colors cursor-pointer"
             >
               {isSignUp
                 ? "Already have an account? Sign in here"
