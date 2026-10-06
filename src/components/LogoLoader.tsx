@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera } from "lucide-react";
+import BrandLogo from "@/components/BrandLogo";
 
 interface LogoLoaderProps {
   message?: string;
@@ -25,16 +25,14 @@ export default function LogoLoader({
           {/* Animated concentric pulse rings */}
           <div className="relative flex items-center justify-center">
             {/* Outer expanding ping ring */}
-            <div className="absolute w-24 h-24 rounded-2xl border border-emerald-400/30 animate-ping opacity-40 duration-1000" />
+            <div className="absolute w-28 h-28 rounded-2xl border border-emerald-400/30 animate-ping opacity-40 duration-1000" />
             
             {/* Middle pulsing glow */}
-            <div className="absolute w-20 h-20 rounded-2xl bg-emerald-500/20 blur-md animate-pulse" />
+            <div className="absolute w-24 h-24 rounded-2xl bg-emerald-500/20 blur-md animate-pulse" />
 
             {/* Rotating gradient ring */}
-            <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-400 via-teal-300 to-green-500 p-[1.5px] shadow-2xl shadow-emerald-500/40">
-              <div className="w-full h-full bg-[#050907] rounded-[14.5px] flex items-center justify-center">
-                <Camera className="w-8 h-8 text-emerald-400 animate-pulse" />
-              </div>
+            <div className="relative flex items-center justify-center animate-pulse">
+              <BrandLogo size="lg" showGlow />
             </div>
           </div>
 
@@ -75,14 +73,8 @@ export default function LogoLoader({
         }`} />
 
         {/* Logo Container */}
-        <div className={`relative rounded-xl bg-gradient-to-tr from-emerald-400 via-green-400 to-teal-500 p-[1px] shadow-lg shadow-emerald-500/20 ${
-          isLarge ? "w-14 h-14" : isSmall ? "w-8 h-8" : "w-11 h-11"
-        }`}>
-          <div className="w-full h-full bg-[#050907] rounded-[11px] flex items-center justify-center">
-            <Camera className={`text-emerald-400 animate-pulse ${
-              isLarge ? "w-7 h-7" : isSmall ? "w-4 h-4" : "w-5 h-5"
-            }`} />
-          </div>
+        <div className="relative flex items-center justify-center animate-pulse">
+          <BrandLogo size={isLarge ? "md" : isSmall ? "xs" : "sm"} showGlow />
         </div>
       </div>
 

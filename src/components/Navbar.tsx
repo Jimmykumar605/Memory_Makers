@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Camera,
   Search,
@@ -16,22 +17,50 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import ThemeToggle from "@/components/ThemeToggle";
+import BrandLogo from "@/components/BrandLogo";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAuthenticated, role, logout } = useAuth();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogoClick = (e: React.MouseEvent) => {
+    if (pathname === "/") {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (window.location.hash) {
+        window.history.pushState(null, "", "/");
+      }
+    }
+    setMobileMenuOpen(false);
+  };
+
+  const handleSectionClick = (e: React.MouseEvent, sectionId: string) => {
+    if (pathname === "/") {
+      e.preventDefault();
+      const elem = document.getElementById(sectionId);
+      if (elem) {
+        elem.scrollIntoView({ behavior: "smooth", block: "start" });
+        window.history.pushState(null, "", `/#${sectionId}`);
+      }
+    } else {
+      router.push(`/#${sectionId}`);
+    }
+    setMobileMenuOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full glass-panel border-b border-white/[0.08] backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo & Brand */}
-          <Link href="/" className="flex items-center gap-3 group shrink-0">
-            <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 via-green-400 to-teal-600 p-[1px] flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform duration-300">
-              <div className="w-full h-full bg-[#050907] rounded-[11px] flex items-center justify-center group-hover:bg-[#09110d] transition-colors">
-                <Camera className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform duration-300" />
-              </div>
-            </div>
+          <Link
+            href="/"
+            onClick={handleLogoClick}
+            className="flex items-center gap-3 group shrink-0"
+          >
+            <BrandLogo size="md" showGlow />
             <div className="flex flex-col">
               <span className="font-serif tracking-widest text-lg font-bold text-white uppercase group-hover:text-emerald-300 transition-colors">
                 MEMORY<span className="text-emerald-400">MAKERS</span>
@@ -53,12 +82,14 @@ export default function Navbar() {
             </Link>
             <Link
               href="/#how-it-works"
+              onClick={(e) => handleSectionClick(e, "how-it-works")}
               className="text-xs lg:text-sm font-semibold uppercase tracking-wider text-zinc-300 hover:text-emerald-400 transition-colors"
             >
               How It Works
             </Link>
             <Link
               href="/#faq"
+              onClick={(e) => handleSectionClick(e, "faq")}
               className="text-xs lg:text-sm font-semibold uppercase tracking-wider text-zinc-300 hover:text-emerald-400 transition-colors"
             >
               FAQ
@@ -175,14 +206,14 @@ export default function Navbar() {
           </Link>
           <Link
             href="/#how-it-works"
-            onClick={() => setMobileMenuOpen(false)}
+            onClick={(e) => handleSectionClick(e, "how-it-works")}
             className="block px-3 py-2 rounded-md text-sm font-semibold uppercase tracking-wider text-zinc-200 hover:text-emerald-400 hover:bg-emerald-500/[0.05]"
           >
             How It Works
           </Link>
           <Link
             href="/#faq"
-            onClick={() => setMobileMenuOpen(false)}
+            onClick={(e) => handleSectionClick(e, "faq")}
             className="block px-3 py-2 rounded-md text-sm font-semibold uppercase tracking-wider text-zinc-200 hover:text-emerald-400 hover:bg-emerald-500/[0.05]"
           >
             FAQ

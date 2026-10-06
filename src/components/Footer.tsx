@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Camera, Heart, Mail, MapPin, Globe } from "lucide-react";
+import BrandLogo from "@/components/BrandLogo";
 
 export default function Footer() {
   return (
@@ -9,11 +10,7 @@ export default function Footer() {
           {/* Brand info */}
           <div className="lg:col-span-2 space-y-4">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-green-600 p-[1px] flex items-center justify-center shadow-md shadow-emerald-500/10">
-                <div className="w-full h-full bg-[#050907] rounded-[11px] flex items-center justify-center">
-                  <Camera className="w-4 h-4 text-emerald-400" />
-                </div>
-              </div>
+              <BrandLogo size="sm" showGlow />
               <span className="font-serif tracking-widest text-lg font-bold text-white uppercase group-hover:text-emerald-300 transition-colors">
                 MEMORY<span className="text-emerald-400">MAKERS</span>
               </span>

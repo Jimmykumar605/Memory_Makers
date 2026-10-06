@@ -6,6 +6,7 @@ import { Photographer, OccasionType, Review } from "@/lib/types";
 import { addPhotographerReview } from "@/lib/photographerStore";
 import { submitReviewToSupabase } from "@/lib/supabase/service";
 import { OCCASIONS } from "@/lib/data";
+import CustomSelect from "@/components/CustomSelect";
 
 interface ReviewModalProps {
   photographer: Photographer;
@@ -188,17 +189,16 @@ export default function ReviewModal({
                   <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
                     Occasion / Ceremony *
                   </label>
-                  <select
+                  <CustomSelect
                     value={occasion}
-                    onChange={(e) => setOccasion(e.target.value as OccasionType)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white focus:outline-none focus:border-emerald-400 font-mono"
-                  >
-                    {OCCASIONS.map((occ) => (
-                      <option key={occ.label} value={occ.label}>
-                        {occ.label}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => setOccasion(val as OccasionType)}
+                    options={OCCASIONS.map((occ) => ({
+                      value: occ.label,
+                      label: occ.label,
+                      description: occ.description,
+                    }))}
+                    className="py-2 text-xs"
+                  />
                 </div>
               </div>
 

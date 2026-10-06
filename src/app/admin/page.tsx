@@ -33,6 +33,7 @@ import {
   UserX,
 } from "lucide-react";
 import { Photographer, UserAccount } from "@/lib/types";
+import CustomSelect from "@/components/CustomSelect";
 import {
   getStoredPhotographers,
   getPendingPhotographers,
@@ -1122,36 +1123,41 @@ export default function AdminPortalPage() {
                 />
               </div>
 
-              {/* State & Status Filters */}
               <div className="flex items-center gap-3 w-full md:w-auto">
-                <select
-                  value={selectedState}
-                  onChange={(e) => setSelectedState(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-[#070b09] border border-white/10 text-xs text-zinc-300 focus:outline-none focus:border-emerald-400 font-mono"
-                >
-                  <option value="All">All Indian States</option>
-                  {PRIMARY_REGIONS.map((r) => (
-                    <option key={r} value={r}>
-                      {r} (Focus)
-                    </option>
-                  ))}
-                  {ALL_INDIAN_STATES.filter((s) => !PRIMARY_REGIONS.includes(s as any)).map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+                <div className="w-44">
+                  <CustomSelect
+                    value={selectedState}
+                    onChange={setSelectedState}
+                    options={[
+                      { value: "All", label: "All Indian States" },
+                      ...PRIMARY_REGIONS.map((r) => ({
+                        value: r,
+                        label: `${r} (Focus)`,
+                        group: "🌟 Featured Key States",
+                      })),
+                      ...ALL_INDIAN_STATES.filter((s) => !PRIMARY_REGIONS.includes(s as any)).map((s) => ({
+                        value: s,
+                        label: s,
+                        group: "🇮🇳 Other Indian States",
+                      })),
+                    ]}
+                    className="py-2 text-xs"
+                  />
+                </div>
 
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-[#070b09] border border-white/10 text-xs text-zinc-300 focus:outline-none focus:border-emerald-400 font-mono"
-                >
-                  <option value="All">All Statuses</option>
-                  <option value="approved">Approved & Live</option>
-                  <option value="pending">Pending Approval</option>
-                  <option value="rejected">Declined</option>
-                </select>
+                <div className="w-40">
+                  <CustomSelect
+                    value={statusFilter}
+                    onChange={setStatusFilter}
+                    options={[
+                      { value: "All", label: "All Statuses" },
+                      { value: "approved", label: "Approved & Live" },
+                      { value: "pending", label: "Pending Approval" },
+                      { value: "rejected", label: "Declined" },
+                    ]}
+                    className="py-2 text-xs"
+                  />
+                </div>
               </div>
             </div>
 
@@ -1349,27 +1355,33 @@ export default function AdminPortalPage() {
 
               <div className="flex items-center gap-2">
                 {/* Role Filter */}
-                <select
-                  value={userRoleFilter}
-                  onChange={(e) => setUserRoleFilter(e.target.value)}
-                  className="px-3 py-2.5 rounded-xl bg-[#090e0c] border border-white/10 text-xs text-zinc-300 focus:outline-none focus:border-sky-400 font-mono"
-                >
-                  <option value="All">All Roles</option>
-                  <option value="client">Clients & Couples</option>
-                  <option value="photographer">Photographers</option>
-                  <option value="admin">Master Administrator</option>
-                </select>
+                <div className="w-44">
+                  <CustomSelect
+                    value={userRoleFilter}
+                    onChange={setUserRoleFilter}
+                    options={[
+                      { value: "All", label: "All Roles" },
+                      { value: "client", label: "Clients & Couples" },
+                      { value: "photographer", label: "Photographers" },
+                      { value: "admin", label: "Master Administrator" },
+                    ]}
+                    className="py-2 text-xs"
+                  />
+                </div>
 
                 {/* Status Filter */}
-                <select
-                  value={userStatusFilter}
-                  onChange={(e) => setUserStatusFilter(e.target.value)}
-                  className="px-3 py-2.5 rounded-xl bg-[#090e0c] border border-white/10 text-xs text-zinc-300 focus:outline-none focus:border-sky-400 font-mono"
-                >
-                  <option value="All">All Statuses</option>
-                  <option value="active">Active Only</option>
-                  <option value="suspended">Suspended Only</option>
-                </select>
+                <div className="w-40">
+                  <CustomSelect
+                    value={userStatusFilter}
+                    onChange={setUserStatusFilter}
+                    options={[
+                      { value: "All", label: "All Statuses" },
+                      { value: "active", label: "Active Only" },
+                      { value: "suspended", label: "Suspended Only" },
+                    ]}
+                    className="py-2 text-xs"
+                  />
+                </div>
               </div>
             </div>
 
@@ -1594,22 +1606,23 @@ export default function AdminPortalPage() {
                   <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
                     State (India) *
                   </label>
-                  <select
+                  <CustomSelect
                     value={newArtistState}
-                    onChange={(e) => setNewArtistState(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white focus:outline-none focus:border-emerald-400 font-mono"
-                  >
-                    {PRIMARY_REGIONS.map((r) => (
-                      <option key={r} value={r}>
-                        {r} (Focus Region)
-                      </option>
-                    ))}
-                    {ALL_INDIAN_STATES.filter((s) => !PRIMARY_REGIONS.includes(s as any)).map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setNewArtistState}
+                    options={[
+                      ...PRIMARY_REGIONS.map((r) => ({
+                        value: r,
+                        label: `${r} (Focus Region)`,
+                        group: "🌟 Featured Key States",
+                      })),
+                      ...ALL_INDIAN_STATES.filter((s) => !PRIMARY_REGIONS.includes(s as any)).map((s) => ({
+                        value: s,
+                        label: s,
+                        group: "🇮🇳 Other Indian States",
+                      })),
+                    ]}
+                    className="py-2 text-xs"
+                  />
                 </div>
 
                 <div>
@@ -1660,15 +1673,16 @@ export default function AdminPortalPage() {
                   <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
                     Gender *
                   </label>
-                  <select
+                  <CustomSelect
                     value={newArtistGender}
-                    onChange={(e) => setNewArtistGender(e.target.value as "male" | "female" | "other")}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white focus:outline-none focus:border-emerald-400 font-mono"
-                  >
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
+                    onChange={(v) => setNewArtistGender(v as "male" | "female" | "other")}
+                    options={[
+                      { value: "male", label: "Male" },
+                      { value: "female", label: "Female" },
+                      { value: "other", label: "Other" },
+                    ]}
+                    className="py-2 text-xs"
+                  />
                 </div>
 
                 <div>

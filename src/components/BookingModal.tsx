@@ -8,6 +8,7 @@ import { Photographer, OccasionType } from "@/lib/types";
 import { OCCASIONS } from "@/lib/data";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/authContext";
+import CustomSelect, { CustomSelectOption } from "@/components/CustomSelect";
 
 interface BookingModalProps {
   photographer: Photographer | null;
@@ -315,17 +316,15 @@ export default function BookingModal({ photographer, isOpen, onClose }: BookingM
                   <label className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
                     Occasion Type *
                   </label>
-                  <select
+                  <CustomSelect
                     value={occasion}
-                    onChange={(e) => setOccasion(e.target.value as OccasionType)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#060907] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 transition-colors"
-                  >
-                    {OCCASIONS.map((occ) => (
-                      <option key={occ.label} value={occ.label} className="bg-[#090d0b]">
-                        {occ.label}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => setOccasion(val as OccasionType)}
+                    options={OCCASIONS.map((occ) => ({
+                      value: occ.label,
+                      label: occ.label,
+                      description: occ.description,
+                    }))}
+                  />
                 </div>
               </div>
 

@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Camera, Sparkles, Heart, ArrowRight, ShieldCheck, Mail, Lock, User, Loader2, LogOut, Clock, RefreshCw, Eye, EyeOff, Phone, KeyRound, CheckCircle2, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { PRIMARY_REGIONS, ALL_INDIAN_STATES } from "@/lib/data";
+import BrandLogo from "@/components/BrandLogo";
+import CustomSelect, { CustomSelectOption } from "@/components/CustomSelect";
 
 function LoginContent() {
   const router = useRouter();
@@ -328,11 +330,7 @@ function LoginContent() {
         {/* Brand Header */}
         <div className="text-center space-y-2">
           <Link href="/" className="inline-flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 via-green-400 to-teal-600 p-[1px] flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform duration-300">
-              <div className="w-full h-full bg-[#050907] rounded-[11px] flex items-center justify-center">
-                <Camera className="w-5 h-5 text-emerald-400 group-hover:text-emerald-300 transition-colors" />
-              </div>
-            </div>
+            <BrandLogo size="md" showGlow />
             <span className="font-serif tracking-widest text-xl font-bold text-white uppercase group-hover:text-emerald-300 transition-colors">
               MEMORY<span className="text-emerald-400">MAKERS</span>
             </span>
@@ -871,24 +869,23 @@ function LoginContent() {
                             <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
                               State (India)
                             </label>
-                            <select
+                            <CustomSelect
                               value={state}
-                              onChange={(e) => setState(e.target.value)}
-                              className="w-full px-3 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white focus:outline-none focus:border-emerald-400 font-mono"
-                            >
-                              {PRIMARY_REGIONS.map((r) => (
-                                <option key={r} value={r}>
-                                  {r} (Focus)
-                                </option>
-                              ))}
-                              {ALL_INDIAN_STATES.filter((s) => !PRIMARY_REGIONS.includes(s as any)).map(
-                                (s) => (
-                                  <option key={s} value={s}>
-                                    {s}
-                                  </option>
-                                )
-                              )}
-                            </select>
+                              onChange={setState}
+                              options={[
+                                ...PRIMARY_REGIONS.map((r) => ({
+                                  value: r,
+                                  label: `${r} (Focus)`,
+                                  group: "🌟 Featured Key States",
+                                })),
+                                ...ALL_INDIAN_STATES.filter((s) => !PRIMARY_REGIONS.includes(s as any)).map((s) => ({
+                                  value: s,
+                                  label: s,
+                                  group: "🇮🇳 Other Indian States",
+                                })),
+                              ]}
+                              className="py-2 text-xs"
+                            />
                           </div>
 
                           <div>
@@ -912,15 +909,16 @@ function LoginContent() {
                             <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
                               Photographer Gender *
                             </label>
-                            <select
+                            <CustomSelect
                               value={gender}
-                              onChange={(e) => setGender(e.target.value as any)}
-                              className="w-full px-3 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white focus:outline-none focus:border-emerald-400 font-mono cursor-pointer"
-                            >
-                              <option value="male">Male</option>
-                              <option value="female">Female</option>
-                              <option value="other">Other</option>
-                            </select>
+                              onChange={(v) => setGender(v as any)}
+                              options={[
+                                { value: "male", label: "Male" },
+                                { value: "female", label: "Female" },
+                                { value: "other", label: "Other" },
+                              ]}
+                              className="py-2 text-xs"
+                            />
                           </div>
 
                           <div>

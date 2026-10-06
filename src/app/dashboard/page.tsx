@@ -35,6 +35,7 @@ import {
   Tag,
 } from "lucide-react";
 import { OCCASIONS, PRIMARY_REGIONS, ALL_INDIAN_STATES } from "@/lib/data";
+import CustomSelect, { CustomSelectOption } from "@/components/CustomSelect";
 
 const DELIVERABLE_PRESET_OPTIONS = [
   "Master color-graded images",
@@ -1082,15 +1083,15 @@ export default function PhotographerDashboardPage() {
                 <label className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
                   Photographer Gender
                 </label>
-                <select
+                <CustomSelect
                   value={gender}
-                  onChange={(e) => setGender(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 font-mono cursor-pointer"
-                >
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
+                  onChange={setGender}
+                  options={[
+                    { value: "male", label: "Male" },
+                    { value: "female", label: "Female" },
+                    { value: "other", label: "Other" },
+                  ]}
+                />
               </div>
             </div>
 
@@ -1170,26 +1171,22 @@ export default function PhotographerDashboardPage() {
                 <label className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
                   State / Union Territory *
                 </label>
-                <select
+                <CustomSelect
                   value={stateRegion}
-                  onChange={(e) => setStateRegion(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 cursor-pointer"
-                >
-                  <optgroup label="🌟 Featured Key States" className="bg-[#090d0b] text-emerald-400 font-semibold">
-                    {PRIMARY_REGIONS.map((reg) => (
-                      <option key={reg} value={reg} className="bg-[#090d0b] text-white">
-                        {reg}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="🇮🇳 Other Indian States" className="bg-[#090d0b] text-zinc-400">
-                    {ALL_INDIAN_STATES.filter((s) => !PRIMARY_REGIONS.includes(s as any)).map((st) => (
-                      <option key={st} value={st} className="bg-[#090d0b] text-white">
-                        {st}
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
+                  onChange={setStateRegion}
+                  options={[
+                    ...PRIMARY_REGIONS.map((reg) => ({
+                      value: reg,
+                      label: reg,
+                      group: "🌟 Featured Key States",
+                    })),
+                    ...ALL_INDIAN_STATES.filter((s) => !PRIMARY_REGIONS.includes(s as any)).map((st) => ({
+                      value: st,
+                      label: st,
+                      group: "🇮🇳 Other Indian States",
+                    })),
+                  ]}
+                />
               </div>
 
               <div>
@@ -1413,17 +1410,16 @@ export default function PhotographerDashboardPage() {
                         <label className="block text-[11px] font-mono uppercase text-zinc-400 mb-1">
                           Occasion Category *
                         </label>
-                        <select
+                        <CustomSelect
                           value={newPhotoOccasion}
-                          onChange={(e) => setNewPhotoOccasion(e.target.value as OccasionType)}
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-xs text-white focus:outline-none focus:border-emerald-400"
-                        >
-                          {OCCASIONS.map((occ) => (
-                            <option key={occ.label} value={occ.label} className="bg-[#090d0b]">
-                              {occ.label}
-                            </option>
-                          ))}
-                        </select>
+                          onChange={(v) => setNewPhotoOccasion(v as OccasionType)}
+                          options={OCCASIONS.map((occ) => ({
+                            value: occ.label,
+                            label: occ.label,
+                            description: occ.description,
+                          }))}
+                          className="py-2 text-xs"
+                        />
                       </div>
                     </div>
 

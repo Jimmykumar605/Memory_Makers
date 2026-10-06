@@ -12,6 +12,10 @@
   --green-accent: #10b981;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -397,29 +401,50 @@ html.light .inline-flex.rounded-full.glass-panel span {
 }
 
 /* ========================================================================== */
-/* HERO SEARCH FORM IN LIGHT MODE                                             */
+/* HERO SEARCH FORM IN LIGHT & DARK MODE                                      */
 /* ========================================================================== */
 
+html.light .hero-search-pill,
 html.light form.glass-panel {
   background: #ffffff !important;
-  border: 1px solid rgba(16, 185, 129, 0.3) !important;
-  box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 16px 40px -10px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(16, 185, 129, 0.15) !important;
 }
 
+html.light .hero-search-pill .sm\:border-r,
 html.light form.glass-panel .sm\:border-r {
   border-color: #e2e8f0 !important;
 }
 
+html.light .hero-search-pill label,
 html.light form.glass-panel label {
   color: #64748b !important;
   font-weight: 700 !important;
 }
 
+html.light .hero-search-pill select,
 html.light form.glass-panel select {
   color: #0f172a !important;
   font-weight: 600 !important;
+  border: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0 !important;
 }
 
+html.dark .hero-search-pill select,
+html:not(.light) .hero-search-pill select {
+  color: #ffffff !important;
+  border: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0 !important;
+}
+
+html.light .hero-search-pill select option,
+html.light .hero-search-pill select optgroup,
 html.light form.glass-panel select option,
 html.light form.glass-panel select optgroup {
   background-color: #ffffff !important;
@@ -855,7 +880,7 @@ html.light footer a[aria-label]:hover {
 /* ========================================================================== */
 
 html.light input:not([type="checkbox"]):not([type="radio"]),
-html.light select,
+html.light select:not(.hero-search-pill select),
 html.light textarea {
   color-scheme: light !important;
   background-color: #ffffff !important;
@@ -1055,4 +1080,25 @@ html.light .dashboard-upload-btn:hover {
   background-color: #10b981 !important;
   border-color: #10b981 !important;
   color: #ffffff !important;
+}
+
+/* Custom luxury scrollbar for popovers and dropdowns */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.6);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(52, 211, 153, 0.25);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 211, 153, 0.5);
 }

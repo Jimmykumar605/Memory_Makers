@@ -6,6 +6,7 @@ import { Search, Filter, SlidersHorizontal, Sparkles, MapPin, X, IndianRupee } f
 import PhotographerCard from "@/components/PhotographerCard";
 import BookingModal from "@/components/BookingModal";
 import LogoLoader from "@/components/LogoLoader";
+import CustomSelect, { CustomSelectOption } from "@/components/CustomSelect";
 import { OCCASIONS, PRIMARY_REGIONS, ALL_INDIAN_STATES } from "@/lib/data";
 import { Photographer, OccasionType } from "@/lib/types";
 import { getPublicPhotographers, getSeedPublicPhotographers, savePhotographers } from "@/lib/photographerStore";
@@ -62,6 +63,58 @@ function PhotographersDirectoryContent() {
     const combined = Array.from(new Set([...PRIMARY_REGIONS, ...presentStates, ...ALL_INDIAN_STATES]));
     return combined;
   }, [photographersList]);
+
+  const stateOptions: CustomSelectOption[] = useMemo(
+    () => [
+      { value: "", label: "All States & Regions" },
+      ...PRIMARY_REGIONS.map((reg) => ({
+        value: reg,
+        label: reg,
+        group: "🌟 Featured Key States",
+      })),
+      ...availableStates
+        .filter((s) => !PRIMARY_REGIONS.includes(s as any))
+        .map((s) => ({
+          value: s,
+          label: s,
+          group: "🇮🇳 Other Indian States",
+        })),
+    ],
+    [availableStates]
+  );
+
+  const occasionOptions: CustomSelectOption[] = useMemo(
+    () => [
+      { value: "", label: "All Occasions & Ceremonies" },
+      ...OCCASIONS.map((occ) => ({
+        value: occ.label,
+        label: occ.label,
+        description: occ.description,
+      })),
+    ],
+    []
+  );
+
+  const budgetOptions: CustomSelectOption[] = useMemo(
+    () => [
+      { value: "", label: "Any Starting Budget (INR)" },
+      { value: "50000", label: "Under ₹50,000", description: "Intimate events & portraits" },
+      { value: "150000", label: "₹50,000 - ₹1,50,000", description: "Full day celebrations & sets" },
+      { value: "300000", label: "₹1,50,000 - ₹3,00,000", description: "Multi-day ceremonies & 4K drones" },
+      { value: "luxury", label: "Luxury Tier (₹3,00,000+)", description: "Royal palace weddings & master artists" },
+    ],
+    []
+  );
+
+  const sortOptions: CustomSelectOption[] = useMemo(
+    () => [
+      { value: "rating", label: "Highest Rated" },
+      { value: "price-asc", label: "Price: Low to High (₹)" },
+      { value: "price-desc", label: "Price: High to Low (₹)" },
+      { value: "experience", label: "Years of Experience" },
+    ],
+    []
+  );
 
   // Filter and sort photographers (ONLY APPROVED ARTISTS)
   const filteredPhotographers = useMemo(() => {
@@ -158,7 +211,7 @@ function PhotographersDirectoryContent() {
         </div>
 
         {/* Filter Controls Bar */}
-        <div className="glass-panel p-5 rounded-2xl border border-emerald-500/20 hover:border-emerald-500/40 transition-colors space-y-4 shadow-xl">
+        <div className="glass-panel p-5 rounded-2xl border border-emerald-500/20 hover:border-emerald-500/40 transition-colors space-y-4 shadow-xl relative z-20">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
             {/* Search Input */}
             <div className="relative">
@@ -174,60 +227,32 @@ function PhotographersDirectoryContent() {
 
             {/* State / Region Dropdown */}
             <div>
-              <select
+              <CustomSelect
                 value={selectedState}
-                onChange={(e) => setSelectedState(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 transition-colors cursor-pointer"
-              >
-                <option value="">All States & Regions</option>
-                <optgroup label="🌟 Featured Key States" className="bg-[#090d0b] text-emerald-400 font-semibold">
-                  {PRIMARY_REGIONS.map((reg) => (
-                    <option key={reg} value={reg} className="bg-[#090d0b] text-white font-normal">
-                      {reg}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="🇮🇳 Other Indian States" className="bg-[#090d0b] text-zinc-400">
-                  {availableStates
-                    .filter((s) => !PRIMARY_REGIONS.includes(s as any))
-                    .map((state) => (
-                      <option key={state} value={state} className="bg-[#090d0b] text-white font-normal">
-                        {state}
-                      </option>
-                    ))}
-                </optgroup>
-              </select>
+                onChange={setSelectedState}
+                options={stateOptions}
+                placeholder="All States & Regions"
+              />
             </div>
 
             {/* Occasion Dropdown */}
             <div>
-              <select
+              <CustomSelect
                 value={selectedOccasion}
-                onChange={(e) => setSelectedOccasion(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 transition-colors cursor-pointer"
-              >
-                <option value="">All Occasions & Ceremonies</option>
-                {OCCASIONS.map((occ) => (
-                  <option key={occ.label} value={occ.label}>
-                    {occ.label}
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedOccasion}
+                options={occasionOptions}
+                placeholder="All Occasions & Ceremonies"
+              />
             </div>
 
             {/* Budget Dropdown in INR (₹) */}
             <div>
-              <select
+              <CustomSelect
                 value={selectedBudget}
-                onChange={(e) => setSelectedBudget(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#070b09] border border-white/10 text-sm text-white focus:outline-none focus:border-emerald-400 transition-colors cursor-pointer"
-              >
-                <option value="">Any Starting Budget (INR)</option>
-                <option value="50000">Under ₹50,000</option>
-                <option value="150000">₹50,000 - ₹1,50,000</option>
-                <option value="300000">₹1,50,000 - ₹3,00,000</option>
-                <option value="luxury">Luxury Tier (₹3,00,000+)</option>
-              </select>
+                onChange={setSelectedBudget}
+                options={budgetOptions}
+                placeholder="Any Starting Budget (INR)"
+              />
             </div>
           </div>
 
@@ -294,18 +319,17 @@ function PhotographersDirectoryContent() {
           </div>
 
           <div className="flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-zinc-400" />
-            <span className="text-xs font-mono uppercase">Sort By:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-[#070b09] border border-white/10 text-white text-xs px-3 py-1.5 rounded-lg focus:outline-none focus:border-emerald-400 cursor-pointer"
-            >
-              <option value="rating">Highest Rated</option>
-              <option value="price-asc">Price: Low to High (₹)</option>
-              <option value="price-desc">Price: High to Low (₹)</option>
-              <option value="experience">Years of Experience</option>
-            </select>
+            <SlidersHorizontal className="w-4 h-4 text-zinc-400 shrink-0" />
+            <span className="text-xs font-mono uppercase shrink-0">Sort By:</span>
+            <div className="w-48 sm:w-52">
+              <CustomSelect
+                value={sortBy}
+                onChange={(v) => setSortBy(v as any)}
+                options={sortOptions}
+                align="right"
+                className="py-1.5 px-3 text-xs"
+              />
+            </div>
           </div>
         </div>
 
